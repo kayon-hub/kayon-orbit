@@ -3,7 +3,7 @@
 // ============================================================
 
 const CACHE_NAME = 'orbit-v1';
-const ASSETS = [
+const STATIC_ASSETS = [
   '/kayon-orbit/',
   '/kayon-orbit/index.html',
   '/kayon-orbit/app.html',
@@ -12,7 +12,7 @@ const ASSETS = [
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
@@ -27,7 +27,24 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const url = e.request.url;
+
+  // ✅ 這幾個來源直接放行，不快取不攔截
+  if (
+    url.includes('script.google.com') ||
+    url.includes('api.line.me') ||
+    url.includes('via.placeholder.com') ||
+    url.includes('fonts.googleapis.com') ||
+    e.request.method !== 'GET'
+  ) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
+
+  // 靜態資源才走快取
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
+  );
+});
   );
 });
