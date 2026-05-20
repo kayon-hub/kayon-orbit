@@ -227,14 +227,20 @@
         
         function goLogin() { window.location.href = 'index.html'; }
 
-        async function exchangeLineCode(code) {
-            const res = await fetch(GAS_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'line_login',
-                    data: { code, redirect_uri: REDIRECT_URI }
-                })
+       async function exchangeLineCode(code) {
+    // 改用 URL 參數（GET 請求）傳遞資料，徹底避開 CORS 限制
+    const url = new URL(GAS_URL);
+    url.searchParams.set('action', 'line_login');
+    url.searchParams.set('code', code);
+    url.searchParams.set('redirect_uri', REDIRECT_URI);
+
+    const res = await fetch(url.toString(), {
+        method: 'GET'
+    });
+    
+    if (!res.ok) throw new Error(`GAS HTTP ${res.status}`);
+    return res.json();
+}
             });
             if (!res.ok) throw new Error(`GAS HTTP ${res.status}`);
             return res.json();
