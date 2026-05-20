@@ -592,9 +592,11 @@ async function init() {
 
   // 隱藏載入遮罩
   // 保險：最多等 3 秒強制隱藏 loader
-setTimeout(() => {
-  document.getElementById('loader').classList.add('hide');
-}, 3000);
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hide');
+  }, 1500);
+});
 
 function openOrbit() {
   alert('ORBIT AI 對話功能即將開放 🚀');
