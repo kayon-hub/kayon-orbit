@@ -297,30 +297,15 @@
   🔒 安全連線中 · SSL 加密保護
 </div>
 
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-  const LINE_CLIENT_ID  = '2010147057';
-  const REDIRECT_URI    = 'https://kayon-hub.github.io/kayon-orbit/app.html';
-  const LINE_AUTH_URL   = 'https://access.line.me/oauth2/v2.1/authorize';
-
-  function lineLogin() {
-    const state = Math.random().toString(36).substring(2);
-    sessionStorage.setItem('line_state', state);
-
-    const params = new URLSearchParams({
-      response_type: 'code',
-      client_id:     LINE_CLIENT_ID,
-      redirect_uri:  REDIRECT_URI,
-      state:         state,
-      scope:         'profile openid',
-    });
-
-    window.location.href = `${LINE_AUTH_URL}?${params.toString()}`;
-  }
-
-  // 如果已有 session，直接進 app
-  if (sessionStorage.getItem('orbit_user')) {
-    window.location.href = 'app.html';
-  }
+  liff.init({ liffId: '2010149593-DyntMxoX' }).then(() => {
+    if (!liff.isLoggedIn()) {
+      liff.login({ redirectUri: 'https://kayon-hub.github.io/kayon-orbit/app.html' });
+    } else {
+      window.location.href = 'app.html';
+    }
+  });
 </script>
 </body>
 </html>
