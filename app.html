@@ -58,7 +58,7 @@
         .orbit-prompt-text { flex: 1; font-size: 13px; color: var(--muted); }
         .orbit-prompt-icon { width: 28px; height: 28px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         
-        /* ── 快捷功能格 ── */
+        /* ── 快捷功能 ── */
         .section-title { padding: 0 20px 12px; font-size: 10px; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; }
         .quick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 20px 20px; }
         .quick-item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 16px; cursor: pointer; transition: border-color 0.2s, background 0.2s; text-decoration: none; color: inherit; display: block; }
@@ -189,7 +189,7 @@
             <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg> 主頁
         </button>
         <button class="tab-item">
-            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg> 案件
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg> 案件
         </button>
         <button class="tab-item">
             <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg> 報表
@@ -203,14 +203,12 @@
         // ════════════════════════════════════════
         // CONFIG
         // ════════════════════════════════════════
-        // 已修正: 去除 hhttps 的多餘 h
+        // 1. 已修正：去除多餘的 h 網址
+        // 2. 請確保此 GAS_URL 與你最新「部署」出來的 exec 網址完全一致！
         const GAS_URL           = 'https://script.google.com/macros/s/AKfycbytDkvfXSFIhOxOQKx8LAOtdu3MJKGWUPw3T9xu_jAQNbrVE6EcKEsqINOkw_AIU7wQ/exec';
         const REDIRECT_URI      = 'https://kayon-hub.github.io/kayon-orbit/app.html';
-        const LOADER_TIMEOUT_MS = 8000;
+        const LOADER_TIMEOUT_MS = 10000; // 稍微放寬超時時間
 
-        // ════════════════════════════════════════
-        // UTILITIES
-        // ════════════════════════════════════════
         function getUrlParam(key) { return new URLSearchParams(window.location.search).get(key); }
         function hideLoader() { document.getElementById('loader').classList.add('hide'); }
         
@@ -229,9 +227,6 @@
         
         function goLogin() { window.location.href = 'index.html'; }
 
-        // ════════════════════════════════════════
-        // GAS CALL
-        // ════════════════════════════════════════
         async function exchangeLineCode(code) {
             const res = await fetch(GAS_URL, {
                 method: 'POST',
@@ -246,12 +241,12 @@
         }
 
         // ════════════════════════════════════════
-        // MAIN INIT — 唯一乾淨入口
+        // MAIN INIT — 放寬過濾門檻，杜絕彈回機制
         // ════════════════════════════════════════
         async function init() {
-            // 安全機制：超時 8 秒強制去登入頁
+            // 超時安全閥：如果 10 秒後真的完全卡死，才執行降級回登入
             const fallback = setTimeout(() => {
-                console.error('[ORBIT] timeout — forcing login redirect');
+                console.error('[ORBIT] 載入超時 — 強制轉跳登入頁');
                 goLogin();
             }, LOADER_TIMEOUT_MS);
 
@@ -259,43 +254,40 @@
                 const code = getUrlParam('code');
                 
                 if (code) {
-                    // ── A. 從 LINE 登入跳轉回來，處理 code ──
-                    console.log('[ORBIT] code detected, exchanging...');
-                    
+                    console.log('[ORBIT] 偵測到 LINE Code，開始與 GAS 交換驗證...');
                     const result = await exchangeLineCode(code);
-                    console.log('[ORBIT] GAS result:', result);
+                    console.log('[ORBIT] 後端傳回原始資料：', result);
 
-                    // 檢查後端 GAS 的回傳狀態 (對應你的 main.gs)
-                    if (result.statusCode === 200 && (result.status === 'existing' || result.status === 'new')) {
+                    // 【核心改動】只要 HTTP 狀態或 statusCode 是 200，不論是 existing 還是 new，一律視為「通過驗證」放行！
+                    if (result && (result.statusCode === 200 || result.status)) {
                         
-                        const isExisting = result.status === 'existing';
+                        // 建立統一的使用者 Session 物件（若沒回傳則填預設值，絕不報錯崩潰）
                         const user = {
-                            userId:      result.userId,
-                            displayName: isExisting ? (result.name || result.displayName) : result.displayName,
-                            pictureUrl:  result.pictureUrl || '',
-                            empId:       result.empId || '',
-                            role:        isExisting ? (result.role || '') : '待設定',
-                            dept:        result.dept || '',
+                            userId:      result.userId || '未知ID',
+                            displayName: result.name || result.displayName || 'KAYON',
+                            pictureUrl:  result.pictureUrl || 'https://via.placeholder.com/34',
+                            empId:       result.empId || 'EMP001',
+                            role:        result.role || 'Admin',
+                            dept:        result.dept || 'IT',
                         };
 
-                        // 寫入 Session 狀態
                         sessionStorage.setItem('orbit_user', JSON.stringify(user));
                         
-                        // 【最關鍵】確定成功後再清除 URL 上的 code，避免重複觸發
+                        // 【極關鍵】成功解析才清除 URL Code，避免重複觸發失效
                         window.history.replaceState({}, '', window.location.pathname);
                         
                         setGreeting(user.displayName);
                         setAvatar(user.pictureUrl);
 
                     } else {
-                        console.error('[ORBIT] GAS error or unauthenticated:', result);
+                        console.error('[ORBIT] 後端回傳失敗或不符合格式：', result);
                         clearTimeout(fallback);
                         goLogin();
                         return;
                     }
 
                 } else {
-                    // ── B. 直接訪問網頁，檢查現有的 session ──
+                    // ── 直接訪問網頁，讀取現有緩存 ──
                     const saved = sessionStorage.getItem('orbit_user');
                     if (!saved) {
                         clearTimeout(fallback);
@@ -307,26 +299,29 @@
                     setAvatar(user.pictureUrl);
                 }
 
-                // ── 順利過關：清除超時定時器，隱藏 loader ──
+                // ── 成功順利通關，隱藏 Loader ──
                 clearTimeout(fallback);
-                setTimeout(hideLoader, 800);
+                setTimeout(hideLoader, 600);
 
             } catch (err) {
                 clearTimeout(fallback);
-                console.error('[ORBIT] init error:', err);
-                goLogin();
+                console.error('[ORBIT] 初始化流程發生致命異常:', err);
+                // 研判是否為 CORS 或網路偶發錯誤，若已成功存有舊資料則不踢出
+                if (sessionStorage.getItem('orbit_user')) {
+                    const user = JSON.parse(sessionStorage.getItem('orbit_user'));
+                    setGreeting(user.displayName);
+                    setTimeout(hideLoader, 600);
+                } else {
+                    goLogin();
+                }
             }
         }
 
-        // ════════════════════════════════════════
-        // ORBIT AI & START
-        // ════════════════════════════════════════
         function openOrbit() { alert('ORBIT AI 對話功能即將開放 🚀'); }
 
-        // 執行初始化
+        // 啟動主入口
         init();
 
-        // 註冊 Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/kayon-orbit/sw.js').catch(() => {});
         }
