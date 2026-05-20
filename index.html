@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0a0a0f">
-  <title>KAYON ORBIT</title>
+  <title>ORBIT · 登入</title>
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
@@ -14,14 +15,14 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0a0a0f;
-      --surface:   #111118;
-      --border:    rgba(255,255,255,0.07);
-      --gold:      #c9a84c;
-      --gold-dim:  #8a6e2f;
-      --white:     #f0ede8;
-      --muted:     rgba(240,237,232,0.4);
-      --line-green:#06C755;
+      --bg:       #0a0a0f;
+      --surface:  #111118;
+      --surface2: #16161f;
+      --border:   rgba(255,255,255,0.07);
+      --gold:     #c9a84c;
+      --gold-dim: #8a6e2f;
+      --white:    #f0ede8;
+      --muted:    rgba(240,237,232,0.4);
     }
 
     html, body {
@@ -32,115 +33,115 @@
       overflow: hidden;
     }
 
-    /* ── 背景粒子層 ── */
-    .bg-layer {
-      position: fixed; inset: 0; z-index: 0;
-      background:
-        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 70%),
-        radial-gradient(ellipse 40% 30% at 80% 80%, rgba(201,168,76,0.05) 0%, transparent 60%);
-    }
-
-    .grid-lines {
+    /* ── 背景格線 ── */
+    .bg-grid {
       position: fixed; inset: 0; z-index: 0;
       background-image:
-        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+        linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
       background-size: 40px 40px;
-      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 80%);
     }
 
-    /* ── 主容器 ── */
+    .bg-glow {
+      position: fixed;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+      z-index: 0;
+    }
+
+    /* ── 主體 ── */
     .container {
       position: relative; z-index: 1;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 40px 32px;
-      gap: 0;
+      padding: 40px 24px;
     }
 
     /* ── Logo 區 ── */
     .logo-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
+      text-align: center;
       margin-bottom: 48px;
       animation: fadeUp 0.8s ease both;
     }
 
-    .logo-symbol {
+    .logo-emblem {
       width: 64px; height: 64px;
-      border: 1.5px solid var(--gold-dim);
       border-radius: 50%;
+      border: 1.5px solid var(--gold-dim);
       display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
       position: relative;
     }
 
-    .logo-symbol::before {
+    .logo-emblem::before {
       content: '';
-      position: absolute; inset: 6px;
-      border: 1px solid rgba(201,168,76,0.3);
+      position: absolute; inset: -6px;
       border-radius: 50%;
+      border: 1px solid rgba(201,168,76,0.15);
     }
 
-    .logo-symbol svg {
-      width: 28px; height: 28px;
-    }
-
-    .logo-wordmark {
+    .logo-emblem-letter {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 36px;
-      letter-spacing: 0.18em;
+      font-size: 28px;
+      color: var(--gold);
+      letter-spacing: 0.05em;
+    }
+
+    .logo-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 42px;
+      letter-spacing: 0.25em;
       color: var(--white);
-      line-height: 1;
+      margin-bottom: 6px;
     }
 
     .logo-sub {
       font-size: 10px;
-      letter-spacing: 0.35em;
-      color: var(--gold);
+      letter-spacing: 0.3em;
+      color: var(--muted);
       text-transform: uppercase;
-      margin-top: -4px;
     }
 
-    /* ── 卡片 ── */
-    .card {
+    /* ── 登入卡片 ── */
+    .login-card {
       width: 100%;
       max-width: 360px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px 28px;
-      animation: fadeUp 0.8s 0.15s ease both;
+      border-radius: 20px;
+      padding: 36px 28px;
+      animation: fadeUp 0.8s ease 0.15s both;
     }
 
-    .card-title {
-      font-size: 13px;
-      letter-spacing: 0.2em;
+    .card-label {
+      font-size: 10px;
+      letter-spacing: 0.25em;
       color: var(--muted);
       text-transform: uppercase;
       text-align: center;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
-    .card-headline {
+    .card-title {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 26px;
-      letter-spacing: 0.06em;
-      color: var(--white);
+      font-size: 30px;
+      letter-spacing: 0.08em;
       text-align: center;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .card-desc {
       font-size: 12px;
       color: var(--muted);
       text-align: center;
-      line-height: 1.7;
-      margin-bottom: 28px;
+      line-height: 1.8;
+      margin-bottom: 32px;
     }
 
     /* ── LINE 登入按鈕 ── */
@@ -150,74 +151,94 @@
       justify-content: center;
       gap: 10px;
       width: 100%;
-      padding: 15px 20px;
-      background: var(--line-green);
+      padding: 16px;
+      background: #06C755;
+      border: none;
+      border-radius: 12px;
       color: #fff;
       font-family: 'Noto Sans TC', sans-serif;
       font-size: 15px;
       font-weight: 500;
       letter-spacing: 0.05em;
-      border: none;
-      border-radius: 10px;
       cursor: pointer;
-      transition: filter 0.2s, transform 0.15s;
-      text-decoration: none;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(6,199,85,0.25);
+      margin-bottom: 24px;
     }
 
-    .btn-line:hover  { filter: brightness(1.1); }
+    .btn-line:hover {
+      background: #05b84d;
+      box-shadow: 0 6px 28px rgba(6,199,85,0.35);
+    }
+
     .btn-line:active { transform: scale(0.98); }
 
     .btn-line svg {
-      width: 22px; height: 22px; flex-shrink: 0;
+      width: 22px; height: 22px;
+      flex-shrink: 0;
     }
 
     /* ── 分隔線 ── */
     .divider {
-      display: flex; align-items: center; gap: 12px;
-      margin: 20px 0;
-      color: var(--muted);
-      font-size: 11px;
-      letter-spacing: 0.1em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
     }
-    .divider::before, .divider::after {
-      content: ''; flex: 1;
+
+    .divider-line {
+      flex: 1;
       height: 1px;
       background: var(--border);
     }
 
-    /* ── 底部說明 ── */
-    .footer-note {
-      margin-top: 24px;
-      font-size: 11px;
+    .divider-text {
+      font-size: 10px;
+      letter-spacing: 0.15em;
       color: var(--muted);
+    }
+
+    /* ── 版本 ── */
+    .version-tag {
       text-align: center;
-      line-height: 1.8;
-      animation: fadeUp 0.8s 0.3s ease both;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: rgba(201,168,76,0.5);
     }
 
-    .footer-note strong {
+    /* ── 底部 ── */
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      animation: fadeUp 0.8s ease 0.3s both;
+    }
+
+    .footer-brand {
+      font-size: 11px;
+      letter-spacing: 0.15em;
       color: var(--gold);
-      font-weight: 400;
+      margin-bottom: 4px;
     }
 
-    /* ── 狀態提示 ── */
-    .status-bar {
+    .footer-powered {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    /* ── SSL Badge ── */
+    .ssl-badge {
       position: fixed;
-      bottom: 32px; left: 50%;
-      transform: translateX(-50%);
-      background: rgba(17,17,24,0.9);
+      bottom: 24px; right: 24px;
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.04);
       border: 1px solid var(--border);
       border-radius: 100px;
-      padding: 8px 20px;
-      font-size: 11px;
+      padding: 6px 12px;
+      font-size: 10px;
       color: var(--muted);
       letter-spacing: 0.1em;
-      white-space: nowrap;
-      backdrop-filter: blur(12px);
-      animation: fadeUp 1s 0.5s ease both;
     }
 
-    /* ── 動畫 ── */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(16px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -226,76 +247,79 @@
 </head>
 <body>
 
-<div class="bg-layer"></div>
-<div class="grid-lines"></div>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
 
 <div class="container">
 
   <div class="logo-wrap">
-    <div class="logo-symbol">
-      <!-- K 字形 SVG -->
-      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M8 5V23M8 14L19 5M8 14L19 23" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+    <div class="logo-emblem">
+      <span class="logo-emblem-letter">K</span>
     </div>
-    <div class="logo-wordmark">ORBIT</div>
+    <div class="logo-name">ORBIT</div>
     <div class="logo-sub">KAYON STUDIO · AI WORKSPACE</div>
   </div>
 
-  <div class="card">
-    <div class="card-title">員工系統入口</div>
-    <div class="card-headline">以 LINE 身份登入</div>
-    <div class="card-desc">使用你的 LINE 帳號進行身份驗證，<br>系統將自動識別你的員工權限。</div>
+  <div class="login-card">
+    <div class="card-label">員工系統入口</div>
+    <div class="card-title">以 LINE 身份登入</div>
+    <div class="card-desc">
+      使用你的 LINE 帳號進行身份驗證，<br>
+      系統將自動識別你的員工權限。
+    </div>
 
-    <a id="lineLoginBtn" class="btn-line" href="#">
-      <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2C6.477 2 2 6.038 2 11c0 3.478 2.093 6.532 5.258 8.327-.098.383-.632 2.417-.662 2.604 0 0-.02.162.085.224.104.063.226.007.226.007.298-.041 3.446-2.26 3.946-2.598C11.233 19.853 11.612 20 12 20c5.523 0 10-4.038 10-9s-4.477-9-10-9z"/>
+    <button class="btn-line" id="btnLogin" onclick="lineLogin()">
+      <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.48 2 2 6.06 2 11.07c0 4.49 3.66 8.25 8.62 8.93.34.07.8.22.91.5.1.26.07.66.03.92l-.15.87c-.05.26-.22 1.03.9.56 1.12-.47 6.03-3.55 8.23-6.08C21.63 14.88 22 13.03 22 11.07 22 6.06 17.52 2 12 2z"/>
       </svg>
       以 LINE 帳號登入
-    </a>
+    </button>
 
-    <div class="divider">KAYON ORBIT v1.0</div>
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-text">KAYON ORBIT v1.0</div>
+      <div class="divider-line"></div>
+    </div>
 
-    <div style="font-size:11px; color:var(--muted); text-align:center; line-height:1.8;">
+    <div class="version-tag">
       登入即代表你同意 KAYON STUDIO<br>員工系統使用條款與隱私政策
     </div>
   </div>
 
-  <div class="footer-note">
-    <strong>KARBØN × GAIA ENTERTAINMENT</strong><br>
-    Powered by ORBIT AI System
+  <div class="footer">
+    <div class="footer-brand">KARBØN × GAIA ENTERTAINMENT</div>
+    <div class="footer-powered">Powered by ORBIT AI System</div>
   </div>
 
 </div>
 
-<div class="status-bar">🔒 安全連線中 · SSL 加密保護</div>
+<div class="ssl-badge">
+  🔒 安全連線中 · SSL 加密保護
+</div>
 
 <script>
-  // ── LINE Login 設定 ──
-  const LINE_LOGIN = {
-    channelId:   '2010147057',
-    redirectUri: encodeURIComponent(window.location.origin + '/kayon-orbit/app.html'),
-    state:       Math.random().toString(36).substring(2),
-    scope:       'profile%20openid',
-  };
+  const LINE_CLIENT_ID  = '2010147057';
+  const REDIRECT_URI    = 'https://kayon-hub.github.io/kayon-orbit/app.html';
+  const LINE_AUTH_URL   = 'https://access.line.me/oauth2/v2.1/authorize';
 
-  // ── 組合 LINE Login URL ──
-  const lineAuthUrl =
-    `https://access.line.me/oauth2/v2.1/authorize` +
-    `?response_type=code` +
-    `&client_id=${LINE_LOGIN.channelId}` +
-    `&redirect_uri=${LINE_LOGIN.redirectUri}` +
-    `&state=${LINE_LOGIN.state}` +
-    `&scope=${LINE_LOGIN.scope}`;
+  function lineLogin() {
+    const state = Math.random().toString(36).substring(2);
+    sessionStorage.setItem('line_state', state);
 
-  document.getElementById('lineLoginBtn').href = lineAuthUrl;
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id:     LINE_CLIENT_ID,
+      redirect_uri:  REDIRECT_URI,
+      state:         state,
+      scope:         'profile openid',
+    });
 
-  // ── 儲存 state 防 CSRF ──
-  sessionStorage.setItem('line_state', LINE_LOGIN.state);
+    window.location.href = `${LINE_AUTH_URL}?${params.toString()}`;
+  }
 
-  // ── 註冊 Service Worker ──
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/kayon-orbit/sw.js').catch(() => {});
+  // 如果已有 session，直接進 app
+  if (sessionStorage.getItem('orbit_user')) {
+    window.location.href = 'app.html';
   }
 </script>
 </body>
