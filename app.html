@@ -1,321 +1,755 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0a0a0f">
-    <title>ORBIT · 工作系統</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        :root {
-            --bg:       #0a0a0f;
-            --surface:  #111118;
-            --surface2: #16161f;
-            --border:   rgba(255,255,255,0.07);
-            --gold:     #c9a84c;
-            --gold-dim: #8a6e2f;
-            --white:    #f0ede8;
-            --muted:    rgba(240,237,232,0.4);
-            --green:    #3dd68c;
-            --red:      #ff6b6b;
-            --blue:     #5b9bd5;
-        }
-        html, body { height: 100%; background: var(--bg); color: var(--white); font-family: 'Noto Sans TC', sans-serif; overflow-x: hidden; }
-        
-        /* ── 頂部 Header ── */
-        .header { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(10,10,15,0.85); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 0 20px; height: 60px; display: flex; align-items: center; justify-content: space-between; }
-        .header-left { display: flex; align-items: center; gap: 10px; }
-        .header-logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.12em; color: var(--white); }
-        .header-logo span { color: var(--gold); }
-        .header-badge { font-size: 9px; letter-spacing: 0.15em; color: var(--gold); border: 1px solid var(--gold-dim); padding: 2px 7px; border-radius: 100px; }
-        .header-avatar { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--gold-dim); background: var(--surface2); overflow: hidden; cursor: pointer; }
-        .header-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* ── 主內容 ── */
-        .main { padding-top: 60px; padding-bottom: 80px; min-height: 100vh; }
-        
-        /* ── 問候區 ── */
-        .greeting-section { padding: 28px 20px 20px; background: linear-gradient(180deg, rgba(201,168,76,0.05) 0%, transparent 100%); border-bottom: 1px solid var(--border); }
-        .greeting-time { font-size: 10px; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
-        .greeting-name { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.06em; margin-bottom: 4px; }
-        .greeting-name span { color: var(--gold); }
-        .greeting-sub { font-size: 12px; color: var(--muted); line-height: 1.6; }
-        
-        /* ── ORBIT AI 對話入口 ── */
-        .orbit-card { margin: 20px; background: linear-gradient(135deg, #16161f 0%, #1a1a26 100%); border: 1px solid rgba(201,168,76,0.2); border-radius: 14px; padding: 20px; position: relative; overflow: hidden; cursor: pointer; transition: border-color 0.2s, transform 0.15s; }
-        .orbit-card:hover { border-color: rgba(201,168,76,0.4); }
-        .orbit-card:active { transform: scale(0.99); }
-        .orbit-card::before { content: ''; position: absolute; top: -40px; right: -40px; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%); }
-        .orbit-tag { font-size: 9px; letter-spacing: 0.25em; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
-        .orbit-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.06em; margin-bottom: 6px; }
-        .orbit-desc { font-size: 12px; color: var(--muted); line-height: 1.7; margin-bottom: 16px; }
-        .orbit-prompt { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
-        .orbit-prompt-text { flex: 1; font-size: 13px; color: var(--muted); }
-        .orbit-prompt-icon { width: 28px; height: 28px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        
-        /* ── 快捷功能 ── */
-        .section-title { padding: 0 20px 12px; font-size: 10px; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; }
-        .quick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 20px 20px; }
-        .quick-item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 16px; cursor: pointer; transition: border-color 0.2s, background 0.2s; text-decoration: none; color: inherit; display: block; }
-        .quick-item:hover { border-color: rgba(255,255,255,0.15); background: var(--surface2); }
-        .quick-item:active { transform: scale(0.98); }
-        .quick-icon { font-size: 22px; margin-bottom: 10px; display: block; }
-        .quick-label { font-size: 13px; font-weight: 500; color: var(--white); margin-bottom: 3px; }
-        .quick-sub { font-size: 11px; color: var(--muted); }
-        .quick-badge { display: inline-block; margin-top: 8px; font-size: 10px; padding: 2px 8px; border-radius: 100px; background: rgba(201,168,76,0.1); color: var(--gold); border: 1px solid rgba(201,168,76,0.2); }
-        
-        /* ── 通知列 ── */
-        .notice-list { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 8px; }
-        .notice-item { display: flex; align-items: flex-start; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
-        .notice-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
-        .notice-dot.gold { background: var(--gold); }
-        .notice-dot.green { background: var(--green); }
-        .notice-dot.red { background: var(--red); }
-        .notice-content { flex: 1; }
-        .notice-title { font-size: 12px; font-weight: 500; margin-bottom: 2px; }
-        .notice-time { font-size: 10px; color: var(--muted); }
-        
-        /* ── 底部導覽 ── */
-        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,10,15,0.92); backdrop-filter: blur(16px); border-top: 1px solid var(--border); display: flex; padding-bottom: env(safe-area-inset-bottom); }
-        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 0 8px; cursor: pointer; color: var(--muted); font-size: 10px; letter-spacing: 0.05em; gap: 4px; transition: color 0.2s; border: none; background: none; }
-        .tab-item.active { color: var(--gold); }
-        .tab-item svg { width: 20px; height: 20px; }
-        
-        /* ── 載入遮罩 ── */
-        .loader { position: fixed; inset: 0; z-index: 999; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; transition: opacity 0.4s; }
-        .loader.hide { opacity: 0; pointer-events: none; }
-        .loader-logo { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 0.2em; color: var(--gold); }
-        .loader-bar { width: 120px; height: 2px; background: var(--surface2); border-radius: 100px; overflow: hidden; }
-        .loader-bar-fill { height: 100%; background: var(--gold); border-radius: 100px; animation: loadBar 1.2s ease forwards; }
-        @keyframes loadBar { from { width: 0; } to { width: 100%; } }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        .animate { animation: fadeUp 0.6s ease both; }
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.2s; }
-        .delay-3 { animation-delay: 0.3s; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a0a0f">
+  <title>ORBIT · 工作系統</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0f;
+      --surface:  #111118;
+      --surface2: #16161f;
+      --border:   rgba(255,255,255,0.07);
+      --gold:     #c9a84c;
+      --gold-dim: #8a6e2f;
+      --white:    #f0ede8;
+      --muted:    rgba(240,237,232,0.4);
+      --green:    #3dd68c;
+      --red:      #ff6b6b;
+      --blue:     #5b9bd5;
+    }
+
+    html, body {
+      height: 100%; background: var(--bg);
+      color: var(--white);
+      font-family: 'Noto Sans TC', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 10px; }
+
+    .header-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.12em;
+      color: var(--white);
+    }
+
+    .header-logo span { color: var(--gold); }
+
+    .header-badge {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      border: 1px solid var(--gold-dim);
+      padding: 2px 7px;
+      border-radius: 100px;
+    }
+
+    .header-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: 1.5px solid var(--gold-dim);
+      background: var(--surface2);
+      overflow: hidden;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .header-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* ── Main ── */
+    .main { padding-top: 60px; padding-bottom: 80px; min-height: 100vh; }
+
+    /* ── Greeting ── */
+    .greeting-section {
+      padding: 28px 20px 20px;
+      background: linear-gradient(180deg, rgba(201,168,76,0.05) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .greeting-time {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .greeting-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .greeting-name span { color: var(--gold); }
+
+    .greeting-sub {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── Employee Info Strip ── */
+    .emp-strip {
+      margin: 16px 20px 0;
+      background: var(--surface);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .emp-strip-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1.5px solid var(--gold-dim);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .emp-strip-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .emp-strip-info { flex: 1; }
+
+    .emp-strip-name {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .emp-strip-meta {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .emp-strip-id {
+      font-size: 10px;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+      font-family: 'Bebas Neue', sans-serif;
+    }
+
+    /* ── Stats Row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 16px 20px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 12px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 24px;
+      letter-spacing: 0.05em;
+      color: var(--gold);
+      margin-bottom: 2px;
+      min-height: 29px;
+    }
+
+    .stat-label {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    /* ── ORBIT AI Card ── */
+    .orbit-card {
+      margin: 0 20px 16px;
+      background: linear-gradient(135deg, #16161f 0%, #1a1a26 100%);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 14px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+
+    .orbit-card:hover  { border-color: rgba(201,168,76,0.4); }
+    .orbit-card:active { transform: scale(0.99); }
+
+    .orbit-card::before {
+      content: '';
+      position: absolute; top: -40px; right: -40px;
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+    }
+
+    .orbit-tag {
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .orbit-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .orbit-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .orbit-prompt {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+
+    .orbit-prompt-text { flex: 1; font-size: 13px; color: var(--muted); }
+
+    .orbit-prompt-icon {
+      width: 28px; height: 28px;
+      background: var(--gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ── Section Title ── */
+    .section-title {
+      padding: 0 20px 12px;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    /* ── Quick Grid ── */
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding: 0 20px 20px;
+    }
+
+    .quick-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 16px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .quick-item:hover  { border-color: rgba(255,255,255,0.15); background: var(--surface2); }
+    .quick-item:active { transform: scale(0.98); }
+
+    .quick-icon { font-size: 22px; margin-bottom: 10px; display: block; }
+    .quick-label { font-size: 13px; font-weight: 500; color: var(--white); margin-bottom: 3px; }
+    .quick-sub { font-size: 11px; color: var(--muted); }
+
+    .quick-badge {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 100px;
+      background: rgba(201,168,76,0.1);
+      color: var(--gold);
+      border: 1px solid rgba(201,168,76,0.2);
+    }
+
+    /* ── Notice ── */
+    .notice-list { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 8px; }
+
+    .notice-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .notice-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .notice-dot.gold  { background: var(--gold); }
+    .notice-dot.green { background: var(--green); }
+    .notice-dot.red   { background: var(--red); }
+
+    .notice-content { flex: 1; }
+    .notice-title { font-size: 12px; font-weight: 500; margin-bottom: 2px; }
+    .notice-time { font-size: 10px; color: var(--muted); }
+
+    /* ── Tab Bar ── */
+    .tab-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(10,10,15,0.92);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .tab-item {
+      flex: 1;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 10px 0 8px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      gap: 4px;
+      transition: color 0.2s;
+      border: none; background: none;
+    }
+
+    .tab-item.active { color: var(--gold); }
+    .tab-item svg { width: 20px; height: 20px; }
+
+    /* ── Loader ── */
+    .loader {
+      position: fixed; inset: 0; z-index: 999;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 16px;
+      transition: opacity 0.5s;
+    }
+
+    .loader.hide { opacity: 0; pointer-events: none; }
+
+    .loader-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+    }
+
+    .loader-status {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      min-height: 16px;
+    }
+
+    .loader-bar {
+      width: 120px; height: 2px;
+      background: var(--surface2);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .loader-bar-fill {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 100px;
+      width: 0;
+      transition: width 0.4s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate { animation: fadeUp 0.6s ease both; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+  </style>
 </head>
 <body>
-    <div class="loader" id="loader">
-        <div class="loader-logo">ORBIT</div>
-        <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+
+<!-- Loader -->
+<div class="loader" id="loader">
+  <div class="loader-logo">ORBIT</div>
+  <div class="loader-bar"><div class="loader-bar-fill" id="loaderFill"></div></div>
+  <div class="loader-status" id="loaderStatus">初始化中...</div>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo">K<span>×</span>G ORBIT</div>
+    <div class="header-badge">AI WORKSPACE</div>
+  </div>
+  <div class="header-avatar">
+    <img id="userAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Ccircle cx='17' cy='17' r='17' fill='%2316161f'/%3E%3C/svg%3E" alt="avatar">
+  </div>
+</header>
+
+<!-- Main -->
+<main class="main">
+
+  <!-- Greeting -->
+  <div class="greeting-section animate">
+    <div class="greeting-time" id="greetTime">—</div>
+    <div class="greeting-name">歡迎，<span id="userName">載入中</span></div>
+    <div class="greeting-sub" id="greetSub">ORBIT 正在驗證你的身份...</div>
+  </div>
+
+  <!-- Employee Strip -->
+  <div class="emp-strip animate delay-1" id="empStrip" style="display:none">
+    <div class="emp-strip-avatar">
+      <img id="empAvatar" src="" alt="avatar">
     </div>
+    <div class="emp-strip-info">
+      <div class="emp-strip-name" id="empName">—</div>
+      <div class="emp-strip-meta" id="empMeta">—</div>
+    </div>
+    <div class="emp-strip-id" id="empId">—</div>
+  </div>
 
-    <header class="header">
-        <div class="header-left">
-            <div class="header-logo">K<span>×</span>G ORBIT</div>
-            <div class="header-badge">AI WORKSPACE</div>
-        </div>
-        <div class="header-avatar" id="avatarWrap">
-            <img id="userAvatar" src="https://via.placeholder.com/34" alt="avatar">
-        </div>
-    </header>
+  <!-- Stats -->
+  <div class="stats-row animate delay-1">
+    <div class="stat-card">
+      <div class="stat-value" id="statCases">—</div>
+      <div class="stat-label">進行案件</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statRevenue">—</div>
+      <div class="stat-label">本月營收</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statClients">—</div>
+      <div class="stat-label">客戶數</div>
+    </div>
+  </div>
 
-    <main class="main">
-        <div class="greeting-section animate">
-            <div class="greeting-time" id="greetTime">— / — / —</div>
-            <div class="greeting-name">早安，<span id="userName">載入中</span></div>
-            <div class="greeting-sub" id="greetSub">ORBIT 正在為你準備今日工作摘要...</div>
-        </div>
+  <!-- ORBIT AI -->
+  <div class="orbit-card animate delay-2" onclick="openOrbit()">
+    <div class="orbit-tag">✦ ORBIT AI ASSISTANT</div>
+    <div class="orbit-title">今天需要什麼協助？</div>
+    <div class="orbit-desc">ORBIT 是你的專屬 AI 工作助理，<br>可以幫你處理案件、查詢客戶、起草訊息。</div>
+    <div class="orbit-prompt">
+      <div class="orbit-prompt-text">輸入指令或問題...</div>
+      <div class="orbit-prompt-icon">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M1 7h12M7 1l6 6-6 6" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+  </div>
 
-        <div class="orbit-card animate delay-1" onclick="openOrbit()">
-            <div class="orbit-tag">✦ ORBIT AI ASSISTANT</div>
-            <div class="orbit-title">今天需要什麼協助？</div>
-            <div class="orbit-desc">ORBIT 是你的專屬 AI 工作助理，<br>可以幫你處理案件、查詢客戶、起草訊息。</div>
-            <div class="orbit-prompt">
-                <div class="orbit-prompt-text">輸入指令或問題...</div>
-                <div class="orbit-prompt-icon">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M1 7h12M7 1l6 6-6 6" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </div>
-            </div>
-        </div>
+  <!-- Quick Grid -->
+  <div class="section-title animate delay-2">快捷功能</div>
+  <div class="quick-grid animate delay-2">
+    <a class="quick-item" href="#crm">
+      <span class="quick-icon">👥</span>
+      <div class="quick-label">客戶管理</div>
+      <div class="quick-sub">CRM · 銷售漏斗</div>
+      <span class="quick-badge">Phase 2</span>
+    </a>
+    <a class="quick-item" href="#cases">
+      <span class="quick-icon">📋</span>
+      <div class="quick-label">案件追蹤</div>
+      <div class="quick-sub">進度 · 交期</div>
+      <span class="quick-badge">即將開放</span>
+    </a>
+    <a class="quick-item" href="#quotation">
+      <span class="quick-icon">💰</span>
+      <div class="quick-label">報價系統</div>
+      <div class="quick-sub">建立 · 歷史記錄</div>
+      <span class="quick-badge">即將開放</span>
+    </a>
+    <a class="quick-item" href="#hr">
+      <span class="quick-icon">🏢</span>
+      <div class="quick-label">HR 系統</div>
+      <div class="quick-sub">打卡 · 排班</div>
+      <span class="quick-badge">Phase 3</span>
+    </a>
+  </div>
 
-        <div class="section-title animate delay-2">快捷功能</div>
-        <div class="quick-grid animate delay-2">
-            <a class="quick-item" href="#crm">
-                <span class="quick-icon">👥</span>
-                <div class="quick-label">客戶管理</div>
-                <div class="quick-sub">CRM · 銷售漏斗</div>
-                <span class="quick-badge">Phase 2</span>
-            </a>
-            <a class="quick-item" href="#cases">
-                <span class="quick-icon">📋</span>
-                <div class="quick-label">案件追蹤</div>
-                <div class="quick-sub">進度 · 交期</div>
-                <span class="quick-badge">即將開放</span>
-            </a>
-            <a class="quick-item" href="#quotation">
-                <span class="quick-icon">💰</span>
-                <div class="quick-label">報價系統</div>
-                <div class="quick-sub">建立 · 歷史記錄</div>
-                <span class="quick-badge">即將開放</span>
-            </a>
-            <a class="quick-item" href="#hr">
-                <span class="quick-icon">🏢</span>
-                <div class="quick-label">HR 系統</div>
-                <div class="quick-sub">打卡 · 排班</div>
-                <span class="quick-badge">Phase 3</span>
-            </a>
-        </div>
+  <!-- Notices -->
+  <div class="section-title animate delay-3">系統通知</div>
+  <div class="notice-list animate delay-3" id="noticeList">
+    <div class="notice-item">
+      <div class="notice-dot gold"></div>
+      <div class="notice-content">
+        <div class="notice-title">歡迎使用 KAYON ORBIT v1.0</div>
+        <div class="notice-time">系統正式啟動 · 今天</div>
+      </div>
+    </div>
+  </div>
 
-        <div class="section-title animate delay-3">系統通知</div>
-        <div class="notice-list animate delay-3" id="noticeList">
-            <div class="notice-item">
-                <div class="notice-dot gold"></div>
-                <div class="notice-content">
-                    <div class="notice-title">歡迎使用 KAYON ORBIT v1.0</div>
-                    <div class="notice-time">系統正式啟動 · 今天</div>
-                </div>
-            </div>
-            <div class="notice-item">
-                <div class="notice-dot green"></div>
-                <div class="notice-content">
-                    <div class="notice-title">LINE 身份驗證成功</div>
-                    <div class="notice-time">已取得員工存取權限</div>
-                </div>
-            </div>
-        </div>
-    </main>
+</main>
 
-    <nav class="tab-bar">
-        <button class="tab-item active">
-            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg> 主頁
-        </button>
-        <button class="tab-item">
-            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg> 案件
-        </button>
-        <button class="tab-item">
-            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg> 報表
-        </button>
-        <button class="tab-item">
-            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg> 我的
-        </button>
-    </nav>
+<!-- Tab Bar -->
+<nav class="tab-bar">
+  <button class="tab-item active">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+    主頁
+  </button>
+  <button class="tab-item">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+    案件
+  </button>
+  <button class="tab-item">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+    報表
+  </button>
+  <button class="tab-item">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+    我的
+  </button>
+</nav>
 
-   <script>
-        // ════════════════════════════════════════
-        // CONFIG
-        // ════════════════════════════════════════
-        // 請確保此 GAS_URL 與你最新「部署」出來的 exec 網址完全一致！
-        const GAS_URL           = 'https://script.google.com/macros/s/AKfycbytDkvfXSFIhOxOQKx8LAOtdu3MJKGWUPw3T9xu_jAQNbrVE6EcKEsqINOkw_AIU7wQ/exec';
-        const REDIRECT_URI      = 'https://kayon-hub.github.io/kayon-orbit/app.html';
-        const LOADER_TIMEOUT_MS = 10000; 
+<script>
+// ════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════
+const GAS_URL      = 'https://script.google.com/macros/s/AKfycbytDkvfXSFIhOxOQKx8LAOtdu3MJKGWUPw3T9xu_jAQNbrVE6EcKEsqINOkw_AIU7wQ/exec';
+const REDIRECT_URI = 'https://kayon-hub.github.io/kayon-orbit/app.html';
+const SECURE_TOKEN = 'KAYON_ORBIT_SECURE_TOKEN_2024';
+const TIMEOUT_MS   = 12000;
 
-        function getUrlParam(key) { return new URLSearchParams(window.location.search).get(key); }
-        function hideLoader() { document.getElementById('loader').classList.add('hide'); }
-        
-        function setGreeting(name) {
-            const hour = new Date().getHours();
-            const greet = hour < 12 ? '早安' : hour < 18 ? '午安' : '晚安';
-            const dateStr = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-            document.getElementById('greetTime').textContent = dateStr;
-            document.querySelector('.greeting-name').innerHTML = `${greet}，<span style="color:var(--gold)">${name}</span>`;
-            document.getElementById('greetSub').textContent = 'ORBIT 已就緒，準備協助你今天的工作。';
-        }
-        
-        function setAvatar(url) {
-            if (url) document.getElementById('userAvatar').src = url;
-        }
-        
-        function goLogin() { window.location.href = 'index.html'; }
+// ════════════════════════════════════════
+// LOADER HELPERS
+// ════════════════════════════════════════
+function setLoaderStatus(msg, progress) {
+  document.getElementById('loaderStatus').textContent = msg;
+  if (progress !== undefined) {
+    document.getElementById('loaderFill').style.width = progress + '%';
+  }
+}
 
-        // ════════════════════════════════════════
-        // 驗證函式 — 乾淨無語法錯誤版本
-        // ════════════════════════════════════════
-        async function exchangeLineCode(code) {
-            const url = new URL(GAS_URL);
-            url.searchParams.set('action', 'line_login');
-            url.searchParams.set('code', code);
-            url.searchParams.set('redirect_uri', REDIRECT_URI);
+function hideLoader() {
+  const loader = document.getElementById('loader');
+  loader.classList.add('hide');
+  setTimeout(() => loader.style.display = 'none', 600);
+}
 
-            const res = await fetch(url.toString(), { method: 'GET' });
-            if (!res.ok) throw new Error(`GAS HTTP ${res.status}`);
-            return res.json();
-        }
+// ════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════
+function getUrlParam(key) {
+  return new URLSearchParams(window.location.search).get(key);
+}
 
-        // ════════════════════════════════════════
-        // MAIN INIT — 放寬過濾門檻，杜絕彈回機制
-        // ════════════════════════════════════════
-        async function init() {
-            const fallback = setTimeout(() => {
-                console.error('[ORBIT] 載入超時 — 強制轉跳登入頁');
-                goLogin();
-            }, LOADER_TIMEOUT_MS);
+function goLogin() {
+  sessionStorage.removeItem('orbit_user');
+  window.location.href = 'index.html';
+}
 
-            try {
-                const code = getUrlParam('code');
-                
-                if (code) {
-                    console.log('[ORBIT] 偵測到 LINE Code，開始與 GAS 交換驗證...');
-                    const result = await exchangeLineCode(code);
-                    console.log('[ORBIT] 後端傳回原始資料：', result);
+function setGreeting(name) {
+  const hour  = new Date().getHours();
+  const greet = hour < 12 ? '早安' : hour < 18 ? '午安' : '晚安';
+  const dateStr = new Date().toLocaleDateString('zh-TW', {
+    year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+  });
+  document.getElementById('greetTime').textContent = dateStr;
+  document.querySelector('.greeting-name').innerHTML =
+    `${greet}，<span style="color:var(--gold)">${name}</span>`;
+  document.getElementById('greetSub').textContent = 'ORBIT 已就緒，準備協助你今天的工作。';
+}
 
-                    if (result && (result.statusCode === 200 || result.status)) {
-                        const user = {
-                            userId:      result.userId || '未知ID',
-                            displayName: result.name || result.displayName || 'KAYON',
-                            pictureUrl:  result.pictureUrl || 'https://via.placeholder.com/34',
-                            empId:       result.empId || 'EMP001',
-                            role:        result.role || 'Admin',
-                            dept:        result.dept || 'IT',
-                        };
+function renderEmployee(user) {
+  const strip = document.getElementById('empStrip');
+  strip.style.display = 'flex';
 
-                        sessionStorage.setItem('orbit_user', JSON.stringify(user));
-                        window.history.replaceState({}, '', window.location.pathname);
-                        
-                        setGreeting(user.displayName);
-                        setAvatar(user.pictureUrl);
+  if (user.pictureUrl) {
+    document.getElementById('userAvatar').src = user.pictureUrl;
+    document.getElementById('empAvatar').src  = user.pictureUrl;
+  }
 
-                    } else {
-                        console.error('[ORBIT] 後端回傳失敗或不符合格式：', result);
-                        clearTimeout(fallback);
-                        goLogin();
-                        return;
-                    }
+  document.getElementById('empName').textContent = user.name || user.displayName || '員工';
+  document.getElementById('empMeta').textContent =
+    [user.role, user.dept].filter(Boolean).join(' · ') || '成員';
+  document.getElementById('empId').textContent = user.empId || '—';
 
-                } else {
-                    const saved = sessionStorage.getItem('orbit_user');
-                    if (!saved) {
-                        clearTimeout(fallback);
-                        goLogin();
-                        return;
-                    }
-                    const user = JSON.parse(saved);
-                    setGreeting(user.displayName);
-                    setAvatar(user.pictureUrl);
-                }
+  // 通知更新
+  const notice = document.getElementById('noticeList');
+  const loginNotice = document.createElement('div');
+  loginNotice.className = 'notice-item';
+  loginNotice.innerHTML = `
+    <div class="notice-dot green"></div>
+    <div class="notice-content">
+      <div class="notice-title">LINE 身份驗證成功</div>
+      <div class="notice-time">已取得員工存取權限 · ${user.empId || '新成員'}</div>
+    </div>`;
+  notice.appendChild(loginNotice);
+}
 
-                clearTimeout(fallback);
-                setTimeout(hideLoader, 600);
+// ════════════════════════════════════════
+// GAS — LINE LOGIN (GET, no CORS issue)
+// ════════════════════════════════════════
+async function exchangeLineCode(code) {
+  const url = new URL(GAS_URL);
+  url.searchParams.set('action', 'line_login');
+  url.searchParams.set('code', code);
+  url.searchParams.set('redirect_uri', REDIRECT_URI);
 
-            } catch (err) {
-                clearTimeout(fallback);
-                console.error('[ORBIT] 初始化流程發生致命異常:', err);
-                if (sessionStorage.getItem('orbit_user')) {
-                    const user = JSON.parse(sessionStorage.getItem('orbit_user'));
-                    setGreeting(user.displayName);
-                    setTimeout(hideLoader, 600);
-                } else {
-                    goLogin();
-                }
-            }
-        }
+  const res = await fetch(url.toString(), { method: 'GET' });
+  if (!res.ok) throw new Error(`GAS HTTP ${res.status}`);
+  return res.json();
+}
 
-        function openOrbit() { alert('ORBIT AI 對話功能即將開放 🚀'); }
+// ════════════════════════════════════════
+// GAS — DASHBOARD DATA
+// ════════════════════════════════════════
+async function loadDashboardData() {
+  try {
+    const url = new URL(GAS_URL);
+    url.searchParams.set('action', 'get_dashboard');
+    url.searchParams.set('token', SECURE_TOKEN);
 
-        // 啟動主入口
-        init();
+    const res  = await fetch(url.toString());
+    const data = await res.json();
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/kayon-orbit/sw.js').catch(() => {});
-        }
-    </script>
+    if (data.statusCode === 200 && data.data) {
+      const d = data.data;
+      document.getElementById('statCases').textContent   = d.active_cases   ?? '—';
+      document.getElementById('statRevenue').textContent = d.monthly_revenue ? `${(d.monthly_revenue/10000).toFixed(0)}萬` : '—';
+      document.getElementById('statClients').textContent = d.total_clients   ?? '—';
+    }
+  } catch (err) {
+    console.warn('[ORBIT] Dashboard data load failed:', err.message);
+    // 靜默失敗，不影響登入
+  }
+}
+
+// ════════════════════════════════════════
+// MAIN INIT — 唯一入口
+// ════════════════════════════════════════
+async function init() {
+  setLoaderStatus('初始化中...', 10);
+
+  // 保險 timeout
+  const fallback = setTimeout(() => {
+    console.error('[ORBIT] Timeout');
+    goLogin();
+  }, TIMEOUT_MS);
+
+  try {
+    const code = getUrlParam('code');
+
+    if (code) {
+      // ── A. 從 LINE 回來，有 code ──
+      console.log('[ORBIT] code detected');
+      window.history.replaceState({}, '', window.location.pathname);
+
+      setLoaderStatus('LINE 驗證中...', 30);
+      const result = await exchangeLineCode(code);
+      console.log('[ORBIT] GAS result:', result);
+
+      setLoaderStatus('驗證完成', 70);
+
+      if (result.status === 'existing') {
+        const user = {
+          userId:      result.userId,
+          displayName: result.displayName,
+          name:        result.name || result.displayName,
+          pictureUrl:  result.pictureUrl || '',
+          empId:       result.empId  || '',
+          role:        result.role   || '',
+          dept:        result.dept   || '',
+        };
+        sessionStorage.setItem('orbit_user', JSON.stringify(user));
+        setGreeting(user.name);
+        renderEmployee(user);
+
+      } else if (result.status === 'new') {
+        const user = {
+          userId:      result.userId,
+          displayName: result.displayName,
+          name:        result.displayName,
+          pictureUrl:  result.pictureUrl || '',
+          empId:       '',
+          role:        '待設定',
+          dept:        '',
+        };
+        sessionStorage.setItem('orbit_user', JSON.stringify(user));
+        setGreeting(user.name);
+        renderEmployee(user);
+
+      } else {
+        console.error('[ORBIT] GAS error:', result);
+        clearTimeout(fallback);
+        goLogin();
+        return;
+      }
+
+    } else {
+      // ── B. 直接進來，讀 session ──
+      const saved = sessionStorage.getItem('orbit_user');
+      if (!saved) {
+        clearTimeout(fallback);
+        goLogin();
+        return;
+      }
+      const user = JSON.parse(saved);
+      setLoaderStatus('載入中...', 50);
+      setGreeting(user.name || user.displayName);
+      renderEmployee(user);
+    }
+
+    // Dashboard 數據（非阻塞）
+    setLoaderStatus('載入儀表板...', 85);
+    loadDashboardData(); // 不 await，背景跑
+
+    setLoaderStatus('就緒', 100);
+    clearTimeout(fallback);
+    setTimeout(hideLoader, 600);
+
+  } catch (err) {
+    clearTimeout(fallback);
+    console.error('[ORBIT] init error:', err);
+    goLogin();
+  }
+}
+
+// ════════════════════════════════════════
+// ORBIT AI
+// ════════════════════════════════════════
+function openOrbit() {
+  alert('ORBIT AI 對話功能即將開放 🚀');
+}
+
+// ════════════════════════════════════════
+// START
+// ════════════════════════════════════════
+init();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/kayon-orbit/sw.js').catch(() => {});
+}
+</script>
 </body>
 </html>
