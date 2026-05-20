@@ -199,15 +199,14 @@
         </button>
     </nav>
 
-    <script>
+   <script>
         // ════════════════════════════════════════
         // CONFIG
         // ════════════════════════════════════════
-        // 1. 已修正：去除多餘的 h 網址
-        // 2. 請確保此 GAS_URL 與你最新「部署」出來的 exec 網址完全一致！
+        // 請確保此 GAS_URL 與你最新「部署」出來的 exec 網址完全一致！
         const GAS_URL           = 'https://script.google.com/macros/s/AKfycbytDkvfXSFIhOxOQKx8LAOtdu3MJKGWUPw3T9xu_jAQNbrVE6EcKEsqINOkw_AIU7wQ/exec';
         const REDIRECT_URI      = 'https://kayon-hub.github.io/kayon-orbit/app.html';
-        const LOADER_TIMEOUT_MS = 10000; // 稍微放寬超時時間
+        const LOADER_TIMEOUT_MS = 10000; 
 
         function getUrlParam(key) { return new URLSearchParams(window.location.search).get(key); }
         function hideLoader() { document.getElementById('loader').classList.add('hide'); }
@@ -227,21 +226,16 @@
         
         function goLogin() { window.location.href = 'index.html'; }
 
-       async function exchangeLineCode(code) {
-    // 改用 URL 參數（GET 請求）傳遞資料，徹底避開 CORS 限制
-    const url = new URL(GAS_URL);
-    url.searchParams.set('action', 'line_login');
-    url.searchParams.set('code', code);
-    url.searchParams.set('redirect_uri', REDIRECT_URI);
+        // ════════════════════════════════════════
+        // 驗證函式 — 乾淨無語法錯誤版本
+        // ════════════════════════════════════════
+        async function exchangeLineCode(code) {
+            const url = new URL(GAS_URL);
+            url.searchParams.set('action', 'line_login');
+            url.searchParams.set('code', code);
+            url.searchParams.set('redirect_uri', REDIRECT_URI);
 
-    const res = await fetch(url.toString(), {
-        method: 'GET'
-    });
-    
-    if (!res.ok) throw new Error(`GAS HTTP ${res.status}`);
-    return res.json();
-}
-            });
+            const res = await fetch(url.toString(), { method: 'GET' });
             if (!res.ok) throw new Error(`GAS HTTP ${res.status}`);
             return res.json();
         }
@@ -250,7 +244,6 @@
         // MAIN INIT — 放寬過濾門檻，杜絕彈回機制
         // ════════════════════════════════════════
         async function init() {
-            // 超時安全閥：如果 10 秒後真的完全卡死，才執行降級回登入
             const fallback = setTimeout(() => {
                 console.error('[ORBIT] 載入超時 — 強制轉跳登入頁');
                 goLogin();
@@ -264,10 +257,7 @@
                     const result = await exchangeLineCode(code);
                     console.log('[ORBIT] 後端傳回原始資料：', result);
 
-                    // 【核心改動】只要 HTTP 狀態或 statusCode 是 200，不論是 existing 還是 new，一律視為「通過驗證」放行！
                     if (result && (result.statusCode === 200 || result.status)) {
-                        
-                        // 建立統一的使用者 Session 物件（若沒回傳則填預設值，絕不報錯崩潰）
                         const user = {
                             userId:      result.userId || '未知ID',
                             displayName: result.name || result.displayName || 'KAYON',
@@ -278,8 +268,6 @@
                         };
 
                         sessionStorage.setItem('orbit_user', JSON.stringify(user));
-                        
-                        // 【極關鍵】成功解析才清除 URL Code，避免重複觸發失效
                         window.history.replaceState({}, '', window.location.pathname);
                         
                         setGreeting(user.displayName);
@@ -293,7 +281,6 @@
                     }
 
                 } else {
-                    // ── 直接訪問網頁，讀取現有緩存 ──
                     const saved = sessionStorage.getItem('orbit_user');
                     if (!saved) {
                         clearTimeout(fallback);
@@ -305,14 +292,12 @@
                     setAvatar(user.pictureUrl);
                 }
 
-                // ── 成功順利通關，隱藏 Loader ──
                 clearTimeout(fallback);
                 setTimeout(hideLoader, 600);
 
             } catch (err) {
                 clearTimeout(fallback);
                 console.error('[ORBIT] 初始化流程發生致命異常:', err);
-                // 研判是否為 CORS 或網路偶發錯誤，若已成功存有舊資料則不踢出
                 if (sessionStorage.getItem('orbit_user')) {
                     const user = JSON.parse(sessionStorage.getItem('orbit_user'));
                     setGreeting(user.displayName);
