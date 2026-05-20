@@ -542,14 +542,15 @@ async function exchangeLineCode(code) {
 }
 
 async function init() {
-  const code  = getUrlParam('code');
-  const state = getUrlParam('state');
+  // 保險：最多 3 秒強制隱藏
+  const hideLoader = () => document.getElementById('loader').classList.add('hide');
+  const loaderTimer = setTimeout(hideLoader, 3000);
+
+  const code = getUrlParam('code');
 
   if (code) {
-    // 有 code → 跟 GAS 交換 token 取得用戶資料
     try {
       const result = await exchangeLineCode(code);
-
       if (result.statusCode === 200) {
         const user = {
           userId:      result.userId,
@@ -557,16 +558,12 @@ async function init() {
           pictureUrl:  result.pictureUrl || '',
         };
         sessionStorage.setItem('orbit_user', JSON.stringify(user));
-
-        // 清除 URL 參數
         window.history.replaceState({}, '', window.location.pathname);
-
         setGreeting(user.displayName);
         if (user.pictureUrl) {
           document.getElementById('userAvatar').src = user.pictureUrl;
         }
       } else {
-        console.error('登入失敗', result);
         window.location.href = 'index.html';
         return;
       }
@@ -576,7 +573,6 @@ async function init() {
       return;
     }
   } else {
-    // 沒有 code → 檢查 session
     const saved = sessionStorage.getItem('orbit_user');
     if (saved) {
       const user = JSON.parse(saved);
@@ -590,6 +586,10 @@ async function init() {
     }
   }
 
+  // 所有分支都會到這裡
+  clearTimeout(loaderTimer);
+  setTimeout(hideLoader, 800);
+}
   // 隱藏載入遮罩
   // 保險：最多等 3 秒強制隱藏 loader
 document.addEventListener('DOMContentLoaded', () => {
