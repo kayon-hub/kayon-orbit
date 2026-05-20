@@ -13,7 +13,7 @@ self.addEventListener('install', e => {
   self.skipWaiting();
 });
 
-self.addEventListener('activate', e => {
+self.addEventListener('fetch', () => {});
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
