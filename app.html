@@ -504,10 +504,107 @@ function setGreeting(name) {
 }
 
 // ── 初始化 ──
+// ── 設定 ──
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbytDkvfXSFIhOxOQKx8LAOtdu3MJKGWUPw3T9xu_jAQNbrVE6EcKEsqINOkw_AIU7wQ/exec';
+const REDIRECT_URI = 'https://kayon-hub.github.io/kayon-orbit/app.html';
+
+function getUrlParam(key) {
+  return new URLSearchParams(window.location.search).get(key);
+}
+
+function setGreeting(name) {
+  const now   = new Date();
+  const hour  = now.getHours();
+  const greet = hour < 12 ? '早安' : hour < 18 ? '午安' : '晚安';
+  const dateStr = now.toLocaleDateString('zh-TW', {
+    year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+  });
+  document.getElementById('greetTime').textContent = dateStr;
+  document.querySelector('.greeting-name').innerHTML =
+    `${greet}，<span style="color:var(--gold)">${name}</span>`;
+  document.getElementById('greetSub').textContent =
+    'ORBIT 已就緒，準備協助你今天的工作。';
+}
+
+async function exchangeLineCode(code) {
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'line_login',
+      data: {
+        code:         code,
+        redirect_uri: REDIRECT_URI,
+      }
+    })
+  });
+  return res.json();
+}
+
 async function init() {
   const code  = getUrlParam('code');
   const state = getUrlParam('state');
 
+  if (code) {
+    // 有 code → 跟 GAS 交換 token 取得用戶資料
+    try {
+      const result = await exchangeLineCode(code);
+
+      if (result.statusCode === 200) {
+        const user = {
+          userId:      result.userId,
+          displayName: result.displayName,
+          pictureUrl:  result.pictureUrl || '',
+        };
+        sessionStorage.setItem('orbit_user', JSON.stringify(user));
+
+        // 清除 URL 參數
+        window.history.replaceState({}, '', window.location.pathname);
+
+        setGreeting(user.displayName);
+        if (user.pictureUrl) {
+          document.getElementById('userAvatar').src = user.pictureUrl;
+        }
+      } else {
+        console.error('登入失敗', result);
+        window.location.href = 'index.html';
+        return;
+      }
+    } catch (err) {
+      console.error('交換 token 失敗', err);
+      window.location.href = 'index.html';
+      return;
+    }
+  } else {
+    // 沒有 code → 檢查 session
+    const saved = sessionStorage.getItem('orbit_user');
+    if (saved) {
+      const user = JSON.parse(saved);
+      setGreeting(user.displayName);
+      if (user.pictureUrl) {
+        document.getElementById('userAvatar').src = user.pictureUrl;
+      }
+    } else {
+      window.location.href = 'index.html';
+      return;
+    }
+  }
+
+  // 隱藏載入遮罩
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hide');
+  }, 1200);
+}
+
+function openOrbit() {
+  alert('ORBIT AI 對話功能即將開放 🚀');
+}
+
+init();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/kayon-orbit/sw.js').catch(() => {});
+}
   // 驗證 state 防 CSRF
   const savedState = sessionStorage.getItem('line_state');
 
