@@ -483,40 +483,28 @@
 </nav>
 
 <script>
-// ── 設定 ──
-const GAS_URL = ''; // 之後填入你的 Apps Script Web App URL
-
-// ── 解析 URL 參數取得 LINE Login code ──
-function getUrlParam(key) {
-  return new URLSearchParams(window.location.search).get(key);
-}
-
-// ── 時間問候 ──
-function setGreeting(name) {
-  const now  = new Date();
-  const hour = now.getHours();
-  const greet = hour < 12 ? '早安' : hour < 18 ? '午安' : '晚安';
-  const dateStr = now.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-
-  document.getElementById('greetTime').textContent = dateStr;
-  document.querySelector('.greeting-name').innerHTML = `${greet}，<span style="color:var(--gold)">${name}</span>`;
-  document.getElementById('greetSub').textContent = 'ORBIT 已就緒，準備協助你今天的工作。';
-}
-
-// ── 初始化 ──
-// ── 設定 ──
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbytDkvfXSFIhOxOQKx8LAOtdu3MJKGWUPw3T9xu_jAQNbrVE6EcKEsqINOkw_AIU7wQ/exec';
+// ════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════
+const GAS_URL      = 'https://script.google.com/macros/s/AKfycbytDkvfXSFIhOxOQKx8LAOtdu3MJKGWUPw3T9xu_jAQNbrVE6EcKEsqINOkw_AIU7wQ/exec';
 const REDIRECT_URI = 'https://kayon-hub.github.io/kayon-orbit/app.html';
+const LOADER_TIMEOUT_MS = 8000;
 
+// ════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════
 function getUrlParam(key) {
   return new URLSearchParams(window.location.search).get(key);
 }
 
+function hideLoader() {
+  document.getElementById('loader').classList.add('hide');
+}
+
 function setGreeting(name) {
-  const now   = new Date();
-  const hour  = now.getHours();
+  const hour  = new Date().getHours();
   const greet = hour < 12 ? '早安' : hour < 18 ? '午安' : '晚安';
-  const dateStr = now.toLocaleDateString('zh-TW', {
+  const dateStr = new Date().toLocaleDateString('zh-TW', {
     year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
   });
   document.getElementById('greetTime').textContent = dateStr;
@@ -526,20 +514,127 @@ function setGreeting(name) {
     'ORBIT 已就緒，準備協助你今天的工作。';
 }
 
+function setAvatar(url) {
+  if (url) document.getElementById('userAvatar').src = url;
+}
+
+function goLogin() {
+  window.location.href = 'index.html';
+}
+
+// ════════════════════════════════════════
+// GAS CALL
+// ════════════════════════════════════════
 async function exchangeLineCode(code) {
   const res = await fetch(GAS_URL, {
-    method: 'POST',
+    method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       action: 'line_login',
-      data: {
-        code:         code,
-        redirect_uri: REDIRECT_URI,
-      }
+      data:   { code, redirect_uri: REDIRECT_URI }
     })
   });
+  if (!res.ok) throw new Error(`GAS HTTP ${res.status}`);
   return res.json();
 }
+
+// ════════════════════════════════════════
+// MAIN INIT — 唯一入口
+// ════════════════════════════════════════
+async function init() {
+  // 保險 timeout：超過 8 秒強制跳登入
+  const fallback = setTimeout(() => {
+    console.error('[ORBIT] timeout — forcing login redirect');
+    goLogin();
+  }, LOADER_TIMEOUT_MS);
+
+  try {
+    const code = getUrlParam('code');
+
+    if (code) {
+      // ── A. 從 LINE 登入回來，有 code ──
+      console.log('[ORBIT] code detected, exchanging...');
+      window.history.replaceState({}, '', window.location.pathname);
+
+      const result = await exchangeLineCode(code);
+      console.log('[ORBIT] GAS result:', result);
+
+      if (result.status === 'existing') {
+        // ✅ 現有員工 → 直接進 dashboard
+        const user = {
+          userId:      result.userId,
+          displayName: result.name || result.displayName,
+          pictureUrl:  result.pictureUrl || '',
+          empId:       result.empId || '',
+          role:        result.role  || '',
+          dept:        result.dept  || '',
+        };
+        sessionStorage.setItem('orbit_user', JSON.stringify(user));
+        setGreeting(user.displayName);
+        setAvatar(user.pictureUrl);
+
+      } else if (result.status === 'new') {
+        // 🆕 新員工 → 目前先進 dashboard，之後可改 onboarding
+        const user = {
+          userId:      result.userId,
+          displayName: result.displayName,
+          pictureUrl:  result.pictureUrl || '',
+          empId:       '',
+          role:        '待設定',
+          dept:        '',
+        };
+        sessionStorage.setItem('orbit_user', JSON.stringify(user));
+        setGreeting(user.displayName);
+        setAvatar(user.pictureUrl);
+
+      } else {
+        // GAS 回傳錯誤
+        console.error('[ORBIT] GAS error:', result);
+        clearTimeout(fallback);
+        goLogin();
+        return;
+      }
+
+    } else {
+      // ── B. 直接進來，檢查 session ──
+      const saved = sessionStorage.getItem('orbit_user');
+      if (!saved) {
+        clearTimeout(fallback);
+        goLogin();
+        return;
+      }
+      const user = JSON.parse(saved);
+      setGreeting(user.displayName);
+      setAvatar(user.pictureUrl);
+    }
+
+    // ── 成功：隱藏 loader ──
+    clearTimeout(fallback);
+    setTimeout(hideLoader, 800);
+
+  } catch (err) {
+    clearTimeout(fallback);
+    console.error('[ORBIT] init error:', err);
+    goLogin();
+  }
+}
+
+// ════════════════════════════════════════
+// ORBIT AI
+// ════════════════════════════════════════
+function openOrbit() {
+  alert('ORBIT AI 對話功能即將開放 🚀');
+}
+
+// ════════════════════════════════════════
+// START
+// ════════════════════════════════════════
+init();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/kayon-orbit/sw.js').catch(() => {});
+}
+</script>
 
 async function init() {
   // 保險：最多 3 秒強制隱藏
