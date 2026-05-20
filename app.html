@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a0a0f">
+  <title>ORBIT · 工作系統</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0f;
+      --surface:  #111118;
+      --surface2: #16161f;
+      --border:   rgba(255,255,255,0.07);
+      --gold:     #c9a84c;
+      --gold-dim: #8a6e2f;
+      --white:    #f0ede8;
+      --muted:    rgba(240,237,232,0.4);
+      --green:    #3dd68c;
+      --red:      #ff6b6b;
+      --blue:     #5b9bd5;
+    }
+
+    html, body {
+      height: 100%; background: var(--bg);
+      color: var(--white);
+      font-family: 'Noto Sans TC', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── 頂部 Header ── */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .header-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.12em;
+      color: var(--white);
+    }
+
+    .header-logo span {
+      color: var(--gold);
+    }
+
+    .header-badge {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      border: 1px solid var(--gold-dim);
+      padding: 2px 7px;
+      border-radius: 100px;
+    }
+
+    .header-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: 1.5px solid var(--gold-dim);
+      background: var(--surface2);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .header-avatar img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+
+    /* ── 主內容 ── */
+    .main {
+      padding-top: 60px;
+      padding-bottom: 80px;
+      min-height: 100vh;
+    }
+
+    /* ── 問候區 ── */
+    .greeting-section {
+      padding: 28px 20px 20px;
+      background: linear-gradient(180deg, rgba(201,168,76,0.05) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .greeting-time {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .greeting-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .greeting-name span { color: var(--gold); }
+
+    .greeting-sub {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── ORBIT AI 對話入口 ── */
+    .orbit-card {
+      margin: 20px;
+      background: linear-gradient(135deg, #16161f 0%, #1a1a26 100%);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 14px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+
+    .orbit-card:hover  { border-color: rgba(201,168,76,0.4); }
+    .orbit-card:active { transform: scale(0.99); }
+
+    .orbit-card::before {
+      content: '';
+      position: absolute; top: -40px; right: -40px;
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+    }
+
+    .orbit-tag {
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .orbit-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .orbit-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .orbit-prompt {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+
+    .orbit-prompt-text {
+      flex: 1;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .orbit-prompt-icon {
+      width: 28px; height: 28px;
+      background: var(--gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ── 快捷功能格 ── */
+    .section-title {
+      padding: 0 20px 12px;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding: 0 20px 20px;
+    }
+
+    .quick-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 16px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .quick-item:hover  { border-color: rgba(255,255,255,0.15); background: var(--surface2); }
+    .quick-item:active { transform: scale(0.98); }
+
+    .quick-icon {
+      font-size: 22px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .quick-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--white);
+      margin-bottom: 3px;
+    }
+
+    .quick-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .quick-badge {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 100px;
+      background: rgba(201,168,76,0.1);
+      color: var(--gold);
+      border: 1px solid rgba(201,168,76,0.2);
+    }
+
+    /* ── 通知列 ── */
+    .notice-list {
+      padding: 0 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .notice-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .notice-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    .notice-dot.gold  { background: var(--gold); }
+    .notice-dot.green { background: var(--green); }
+    .notice-dot.red   { background: var(--red); }
+
+    .notice-content { flex: 1; }
+
+    .notice-title {
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .notice-time {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    /* ── 底部導覽 ── */
+    .tab-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(10,10,15,0.92);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .tab-item {
+      flex: 1;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 10px 0 8px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      gap: 4px;
+      transition: color 0.2s;
+      border: none; background: none;
+    }
+
+    .tab-item.active { color: var(--gold); }
+
+    .tab-item svg {
+      width: 20px; height: 20px;
+    }
+
+    /* ── 載入遮罩 ── */
+    .loader {
+      position: fixed; inset: 0; z-index: 999;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 16px;
+      transition: opacity 0.4s;
+    }
+
+    .loader.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loader-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+    }
+
+    .loader-bar {
+      width: 120px; height: 2px;
+      background: var(--surface2);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .loader-bar-fill {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 100px;
+      animation: loadBar 1.2s ease forwards;
+    }
+
+    @keyframes loadBar {
+      from { width: 0; }
+      to   { width: 100%; }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate { animation: fadeUp 0.6s ease both; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+  </style>
+</head>
+<body>
+
+<!-- 載入遮罩 -->
+<div class="loader" id="loader">
+  <div class="loader-logo">ORBIT</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo">K<span>×</span>G ORBIT</div>
+    <div class="header-badge">AI WORKSPACE</div>
+  </div>
+  <div class="header-avatar" id="avatarWrap">
+    <img id="userAvatar" src="https://via.placeholder.com/34" alt="avatar">
+  </div>
+</header>
+
+<!-- 主內容 -->
+<main class="main">
+
+  <!-- 問候區 -->
+  <div class="greeting-section animate">
+    <div class="greeting-time" id="greetTime">— / — / —</div>
+    <div class="greeting-name">早安，<span id="userName">載入中</span></div>
+    <div class="greeting-sub" id="greetSub">ORBIT 正在為你準備今日工作摘要...</div>
+  </div>
+
+  <!-- ORBIT AI 入口 -->
+  <div class="orbit-card animate delay-1" onclick="openOrbit()">
+    <div class="orbit-tag">✦ ORBIT AI ASSISTANT</div>
+    <div class="orbit-title">今天需要什麼協助？</div>
+    <div class="orbit-desc">ORBIT 是你的專屬 AI 工作助理，<br>可以幫你處理案件、查詢客戶、起草訊息。</div>
+    <div class="orbit-prompt">
+      <div class="orbit-prompt-text">輸入指令或問題...</div>
+      <div class="orbit-prompt-icon">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M1 7h12M7 1l6 6-6 6" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- 快捷功能 -->
+  <div class="section-title animate delay-2">快捷功能</div>
+  <div class="quick-grid animate delay-2">
+    <a class="quick-item" href="#crm">
+      <span class="quick-icon">👥</span>
+      <div class="quick-label">客戶管理</div>
+      <div class="quick-sub">CRM · 銷售漏斗</div>
+      <span class="quick-badge">Phase 2</span>
+    </a>
+    <a class="quick-item" href="#cases">
+      <span class="quick-icon">📋</span>
+      <div class="quick-label">案件追蹤</div>
+      <div class="quick-sub">進度 · 交期</div>
+      <span class="quick-badge">即將開放</span>
+    </a>
+    <a class="quick-item" href="#quotation">
+      <span class="quick-icon">💰</span>
+      <div class="quick-label">報價系統</div>
+      <div class="quick-sub">建立 · 歷史記錄</div>
+      <span class="quick-badge">即將開放</span>
+    </a>
+    <a class="quick-item" href="#hr">
+      <span class="quick-icon">🏢</span>
+      <div class="quick-label">HR 系統</div>
+      <div class="quick-sub">打卡 · 排班</div>
+      <span class="quick-badge">Phase 3</span>
+    </a>
+  </div>
+
+  <!-- 通知 -->
+  <div class="section-title animate delay-3">系統通知</div>
+  <div class="notice-list animate delay-3" id="noticeList">
+    <div class="notice-item">
+      <div class="notice-dot gold"></div>
+      <div class="notice-content">
+        <div class="notice-title">歡迎使用 KAYON ORBIT v1.0</div>
+        <div class="notice-time">系統正式啟動 · 今天</div>
+      </div>
+    </div>
+    <div class="notice-item">
+      <div class="notice-dot green"></div>
+      <div class="notice-content">
+        <div class="notice-title">LINE 身份驗證成功</div>
+        <div class="notice-time">已取得員工存取權限</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- 底部導覽 -->
+<nav class="tab-bar">
+  <button class="tab-item active">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+    主頁
+  </button>
+  <button class="tab-item">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+    案件
+  </button>
+  <button class="tab-item">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+    報表
+  </button>
+  <button class="tab-item">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+    我的
+  </button>
+</nav>
+
+<script>
+// ── 設定 ──
+const GAS_URL = ''; // 之後填入你的 Apps Script Web App URL
+
+// ── 解析 URL 參數取得 LINE Login code ──
+function getUrlParam(key) {
+  return new URLSearchParams(window.location.search).get(key);
+}
+
+// ── 時間問候 ──
+function setGreeting(name) {
+  const now  = new Date();
+  const hour = now.getHours();
+  const greet = hour < 12 ? '早安' : hour < 18 ? '午安' : '晚安';
+  const dateStr = now.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+
+  document.getElementById('greetTime').textContent = dateStr;
+  document.querySelector('.greeting-name').innerHTML = `${greet}，<span style="color:var(--gold)">${name}</span>`;
+  document.getElementById('greetSub').textContent = 'ORBIT 已就緒，準備協助你今天的工作。';
+}
+
+// ── 初始化 ──
+async function init() {
+  const code  = getUrlParam('code');
+  const state = getUrlParam('state');
+
+  // 驗證 state 防 CSRF
+  const savedState = sessionStorage.getItem('line_state');
+
+  if (!code) {
+    // 沒有 code，可能是直接訪問或已登入
+    const saved = sessionStorage.getItem('orbit_user');
+    if (saved) {
+      const user = JSON.parse(saved);
+      setGreeting(user.displayName);
+      document.getElementById('userAvatar').src = user.pictureUrl || '';
+    } else {
+      window.location.href = 'index.html';
+      return;
+    }
+  } else {
+    // 有 code，顯示載入中
+    // 這裡需要後端交換 token
+    // 暫時用 displayName placeholder
+    const mockUser = { displayName: '員工', pictureUrl: '' };
+    sessionStorage.setItem('orbit_user', JSON.stringify(mockUser));
+    setGreeting(mockUser.displayName);
+
+    // 清除 URL 參數
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+
+  // 隱藏載入遮罩
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hide');
+  }, 1200);
+}
+
+function openOrbit() {
+  alert('ORBIT AI 對話功能即將開放 🚀');
+}
+
+init();
+
+// ── Service Worker ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/kayon-orbit/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
