@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KAYON STUDIO — 報價單</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink:     #0e0e0e;
+      --paper:   #f5f2ec;
+      --cream:   #ede9e0;
+      --gold:    #b8976a;
+      --gold-lt: #d4b896;
+      --line:    #d0cab8;
+      --muted:   #888070;
+      --red:     #c0392b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Mono', monospace;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 40px 20px 80px;
+    }
+
+    /* ── DOCUMENT WRAPPER ── */
+    .document {
+      max-width: 860px;
+      margin: 0 auto;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: 0 8px 48px rgba(0,0,0,.12);
+    }
+
+    /* ── HEADER ── */
+    .doc-header {
+      padding: 48px 56px 36px;
+      border-bottom: 2px solid var(--ink);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: end;
+    }
+
+    .brand-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 300;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .brand-sub {
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      margin-top: 6px;
+      text-transform: uppercase;
+    }
+
+    .doc-title-block { text-align: right; }
+
+    .doc-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 36px;
+      font-weight: 600;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+    }
+
+    .doc-no {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+      letter-spacing: 2px;
+    }
+
+    .doc-no span {
+      color: var(--gold);
+      font-weight: 400;
+    }
+
+    /* ── SECTION ── */
+    .section {
+      padding: 32px 56px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-label {
+      font-size: 9px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
+    /* ── FORM FIELDS ── */
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 32px; }
+    .field-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px 24px; }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    .field label {
+      font-size: 9px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--line);
+      padding: 8px 0;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--ink);
+      outline: none;
+      transition: border-color .2s;
+      width: 100%;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-bottom-color: var(--gold);
+    }
+
+    .field input::placeholder,
+    .field textarea::placeholder { color: var(--line); }
+
+    .field select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888070'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 4px center; padding-right: 20px; }
+
+    /* ── ITEMS TABLE ── */
+    .items-table { width: 100%; border-collapse: collapse; }
+
+    .items-table thead tr {
+      border-bottom: 1px solid var(--ink);
+    }
+
+    .items-table th {
+      font-size: 9px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 0 10px;
+      text-align: left;
+      font-weight: 400;
+    }
+
+    .items-table th.right { text-align: right; }
+
+    .items-table td {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+
+    .items-table td input,
+    .items-table td select {
+      background: transparent;
+      border: none;
+      border-bottom: 1px dashed var(--line);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--ink);
+      outline: none;
+      width: 100%;
+      padding: 4px 0;
+    }
+
+    .items-table td input:focus,
+    .items-table td select:focus { border-bottom-color: var(--gold); }
+
+    .items-table td.right { text-align: right; }
+    .items-table td.subtotal { font-weight: 400; color: var(--ink); text-align: right; min-width: 80px; }
+    .items-table td.delete { width: 28px; text-align: center; }
+
+    .btn-delete {
+      background: none;
+      border: none;
+      color: var(--line);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 2px 6px;
+      transition: color .15s;
+    }
+    .btn-delete:hover { color: var(--red); }
+
+    /* col widths */
+    .col-product { width: 36%; }
+    .col-desc    { width: 26%; }
+    .col-price   { width: 13%; }
+    .col-qty     { width: 8%; }
+    .col-sub     { width: 13%; }
+    .col-del     { width: 4%; }
+
+    .btn-add-item {
+      margin-top: 16px;
+      background: none;
+      border: 1px dashed var(--line);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      padding: 8px 20px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-add-item:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── TOTALS ── */
+    .totals {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      padding-top: 20px;
+    }
+
+    .total-row {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .total-row .label { color: var(--muted); letter-spacing: 2px; font-size: 10px; text-transform: uppercase; min-width: 120px; text-align: right; }
+    .total-row .value { min-width: 100px; text-align: right; font-size: 13px; }
+    .total-row.discount .value { color: var(--red); }
+
+    .total-final {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      border-top: 2px solid var(--ink);
+      padding-top: 12px;
+      margin-top: 4px;
+    }
+
+    .total-final .label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      min-width: 120px;
+      text-align: right;
+    }
+
+    .total-final .value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 600;
+      min-width: 100px;
+      text-align: right;
+      color: var(--ink);
+    }
+
+    /* ── DELIVERY / TERMS ── */
+    .terms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+    .terms-block { display: flex; flex-direction: column; gap: 8px; }
+    .terms-block .terms-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+    .terms-block .terms-value {
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--ink);
+      border-left: 2px solid var(--gold);
+      padding-left: 12px;
+    }
+
+    /* ── SEALS & SIGNATURE ── */
+    .sign-section {
+      padding: 40px 56px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px;
+      align-items: end;
+    }
+
+    .sign-block { display: flex; flex-direction: column; gap: 12px; }
+    .sign-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+
+    /* Seal upload */
+    .seal-upload {
+      width: 120px;
+      height: 120px;
+      border: 1px dashed var(--line);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+    .seal-upload:hover { border-color: var(--gold); }
+    .seal-upload input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .seal-upload .seal-hint { font-size: 10px; color: var(--line); letter-spacing: 1px; text-align: center; line-height: 1.5; pointer-events: none; }
+    .seal-upload img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; display: none; }
+
+    /* Signature canvas */
+    .sig-wrap {
+      border: 1px solid var(--line);
+      background: white;
+      position: relative;
+    }
+    canvas#sig-canvas {
+      display: block;
+      width: 100%;
+      height: 120px;
+      cursor: crosshair;
+      touch-action: none;
+    }
+    .sig-clear {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--line);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: 'DM Mono', monospace;
+    }
+    .sig-clear:hover { color: var(--red); }
+    .sig-underline {
+      height: 1px;
+      background: var(--line);
+      margin-top: 12px;
+    }
+    .sig-name {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+      letter-spacing: 1px;
+    }
+
+    /* ── SUBMIT ── */
+    .submit-section {
+      padding: 32px 56px 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .btn-submit {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      background: var(--ink);
+      color: var(--paper);
+      border: none;
+      padding: 16px 64px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-submit:hover { background: var(--gold); }
+    .btn-submit:disabled { background: var(--line); cursor: not-allowed; }
+
+    .submit-note { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-align: center; }
+
+    /* ── STATUS MSG ── */
+    .status-msg {
+      display: none;
+      padding: 16px 24px;
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-align: center;
+      border: 1px solid;
+    }
+    .status-msg.ok    { color: #2d6a4f; border-color: #2d6a4f; background: #f0fff4; }
+    .status-msg.error { color: var(--red); border-color: var(--red); background: #fff5f5; }
+
+    /* ── PROMO ── */
+    .promo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .promo-row input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--line);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      padding: 6px 0;
+      outline: none;
+      width: 180px;
+      text-transform: uppercase;
+    }
+    .promo-row input:focus { border-bottom-color: var(--gold); }
+    .promo-tag {
+      font-size: 10px;
+      color: #2d6a4f;
+      letter-spacing: 1px;
+      display: none;
+    }
+
+    @media (max-width: 640px) {
+      .doc-header { grid-template-columns: 1fr; }
+      .doc-title-block { text-align: left; }
+      .field-grid, .field-grid-3, .terms-grid { grid-template-columns: 1fr; }
+      .sign-section { grid-template-columns: 1fr; }
+      .section { padding: 24px 24px; }
+      .doc-header { padding: 32px 24px 24px; }
+      .submit-section { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="document" id="doc">
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <div>
+      <div class="brand-name">KAYON STUDIO</div>
+      <div class="brand-sub">KARBØN × GAIA ENTERTAINMENT</div>
+    </div>
+    <div class="doc-title-block">
+      <div class="doc-title">報價單</div>
+      <div class="doc-no">NO. <span id="display-quote-no">—</span></div>
+      <div class="doc-no" style="margin-top:4px" id="display-date"></div>
+    </div>
+  </div>
+
+  <!-- CLIENT INFO -->
+  <div class="section">
+    <div class="section-label">客戶資料</div>
+    <div class="field-grid">
+      <div class="field">
+        <label>客戶名稱 *</label>
+        <input type="text" id="f-customer" placeholder="客戶名稱或公司名稱" />
+      </div>
+      <div class="field">
+        <label>聯絡人</label>
+        <input type="text" id="f-contact" placeholder="聯絡人姓名" />
+      </div>
+      <div class="field">
+        <label>電話</label>
+        <input type="text" id="f-phone" placeholder="0912-345-678" />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="f-email" placeholder="client@example.com" />
+      </div>
+      <div class="field">
+        <label>負責業務</label>
+        <input type="text" id="f-owner" placeholder="KAYON" />
+      </div>
+      <div class="field">
+        <label>專案名稱</label>
+        <input type="text" id="f-project" placeholder="選填" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ITEMS -->
+  <div class="section">
+    <div class="section-label">服務項目</div>
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th class="col-product">產品 / 服務</th>
+          <th class="col-desc">描述</th>
+          <th class="col-price right">單價</th>
+          <th class="col-qty">數量</th>
+          <th class="col-sub right">小計</th>
+          <th class="col-del"></th>
+        </tr>
+      </thead>
+      <tbody id="items-tbody"></tbody>
+    </table>
+    <button class="btn-add-item" onclick="addItem()">＋ 新增品項</button>
+
+    <!-- TOTALS -->
+    <div class="totals">
+      <div class="total-row">
+        <span class="label">未稅金額</span>
+        <span class="value" id="t-subtotal">NT$ 0</span>
+      </div>
+      <div class="total-row" id="discount-row" style="display:none">
+        <span class="label">折扣</span>
+        <span class="value discount" id="t-discount">— NT$ 0</span>
+      </div>
+      <div class="total-row">
+        <span class="label">營業稅（5%）</span>
+        <span class="value" id="t-tax">NT$ 0</span>
+      </div>
+      <div class="total-final">
+        <span class="label">總計</span>
+        <span class="value" id="t-total">NT$ 0</span>
+      </div>
+    </div>
+
+    <!-- PROMO -->
+    <div style="margin-top:20px">
+      <div class="section-label" style="margin-bottom:8px">優惠代碼</div>
+      <div class="promo-row">
+        <input type="text" id="f-promo" placeholder="輸入優惠代碼" oninput="this.value=this.value.toUpperCase()" />
+        <span class="promo-tag" id="promo-tag"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELIVERY & TERMS -->
+  <div class="section">
+    <div class="section-label">交件條件</div>
+    <div class="field-grid">
+      <div class="field">
+        <label>交期天數（工作天）</label>
+        <input type="number" id="f-days" placeholder="21" min="1" />
+      </div>
+      <div class="field">
+        <label>交期說明</label>
+        <input type="text" id="f-days-note" placeholder="訂金確認後N個工作天完成" />
+      </div>
+    </div>
+    <div style="margin-top:24px">
+      <div class="section-label" style="margin-bottom:12px">付款條件</div>
+      <div class="terms-grid">
+        <div class="terms-block">
+          <div class="terms-value">訂金 50%：確認訂單時繳付<br/>尾款 50%：交件後3日內繳付</div>
+        </div>
+        <div class="terms-block">
+          <div class="terms-value">本報價單有效期限為 14 天<br/>超期需重新報價確認</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEALS & SIGNATURE -->
+  <div class="sign-section">
+
+    <!-- Company Seal (大章) -->
+    <div class="sign-block">
+      <div class="sign-label">公司大章</div>
+      <div class="seal-upload" id="seal-large-wrap">
+        <input type="file" accept="image/*" onchange="loadSeal(this,'seal-large-img','seal-large-b64')" />
+        <div class="seal-hint">點擊上傳<br/>PNG / JPG</div>
+        <img id="seal-large-img" alt="大章" />
+      </div>
+      <input type="hidden" id="seal-large-b64" />
+    </div>
+
+    <!-- Company Stamp (小章) -->
+    <div class="sign-block">
+      <div class="sign-label">公司小章</div>
+      <div class="seal-upload" id="seal-small-wrap">
+        <input type="file" accept="image/*" onchange="loadSeal(this,'seal-small-img','seal-small-b64')" />
+        <div class="seal-hint">點擊上傳<br/>PNG / JPG</div>
+        <img id="seal-small-img" alt="小章" />
+      </div>
+      <input type="hidden" id="seal-small-b64" />
+    </div>
+
+    <!-- Signature -->
+    <div class="sign-block">
+      <div class="sign-label">客戶簽名</div>
+      <div class="sig-wrap">
+        <canvas id="sig-canvas" width="300" height="120"></canvas>
+        <button class="sig-clear" onclick="clearSig()">清除</button>
+      </div>
+      <div class="sig-underline"></div>
+      <div class="sig-name" id="f-customer-display">客戶簽名欄</div>
+    </div>
+
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="submit-section">
+    <div class="status-msg" id="status-msg"></div>
+    <button class="btn-submit" id="btn-submit" onclick="submitQuotation()">送出報價單</button>
+    <div class="submit-note">送出後將自動產生報價單編號並存入系統</div>
+  </div>
+
+</div><!-- /document -->
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbytDkvfXSFIhOxOQKx8LAOtdu3MJKGWUPw3T9xu_jAQNbrVE6EcKEsqINOkw_AIU7wQ/exec';
+
+const TAX_RATE = 0.05;
+
+// ── Product Database ───────────────────────────────────────────
+const PRODUCTS = [
+  { id:'P-001', category:'Music Production', name:'原創歌曲製作 (全套)',      desc:'含詞曲/編曲/母帶混音/錄音室2HR/贈NFC迷你專輯2個。預計21-30工作日交件。', price:17000 },
+  { id:'P-002', category:'Music Production', name:'原創歌曲製作 (純製作)',    desc:'含詞曲/編曲/母帶混音處理。預計14-21個工作日交件。',                     price:8000  },
+  { id:'P-003', category:'Music Production', name:'製作急件加收費用',         desc:'針對歌曲製作、錄音等服務之優先處理費用。',                              price:3000  },
+  { id:'P-004', category:'Music Production', name:'錄音室加時費',             desc:'錄音室租借與工程師支援，每小時計算。',                                  price:1000  },
+  { id:'P-005', category:'Visual Design',    name:'靜態 MV 製作',             desc:'搭配歌曲長度，客戶需提供照片，含基礎剪輯與特效。',                      price:6000  },
+  { id:'P-006', category:'Education',        name:'音樂創作課程 (4堂)',        desc:'零基礎圓夢一對一課程：詞曲創作＋數位編曲混音，手把手帶你完成第一首歌。', price:4000  },
+  { id:'P-007', category:'Education',        name:'音樂創作課程 (8+1堂)',      desc:'一次購買8堂送1堂優惠套票，共9堂。涵蓋完整製作流程。',                   price:8000  },
+  { id:'P-008', category:'Music Production', name:'Podcast 製作 (15min)',     desc:'Podcast 製作剪輯與優化',                                               price:900   },
+  { id:'P-009', category:'Music Production', name:'Podcast 製作 (20min)',     desc:'Podcast 製作剪輯與優化',                                               price:1000  },
+  { id:'P-010', category:'Music Production', name:'Podcast 製作 (25min)',     desc:'Podcast 製作剪輯與優化',                                               price:1200  },
+  { id:'P-011', category:'Music Production', name:'Podcast 方案A (每月4集)',   desc:'每集15分內，超出以10分鐘為一次，每次加收500元',                         price:3800  },
+  { id:'P-012', category:'Music Production', name:'Podcast 方案B (每月8集)',   desc:'每集15分內，超出以10分鐘為一次，每次加收500元',                         price:7500  },
+  { id:'P-013', category:'Product',          name:'NFC 迷你專輯 (加購)',       desc:'原創歌曲製作配套之加購產品。',                                          price:180   },
+  { id:'P-014', category:'附加項目及備註',    name:'',                         desc:'',                                                                     price:0     },
+];
+
+let itemCount = 0;
+
+// ── Init ──────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const today = new Date();
+  document.getElementById('display-date').textContent =
+    today.getFullYear() + '.' +
+    String(today.getMonth()+1).padStart(2,'0') + '.' +
+    String(today.getDate()).padStart(2,'0');
+
+  addItem(); // 預設一行
+  initSignature();
+
+  document.getElementById('f-customer').addEventListener('input', e => {
+    document.getElementById('f-customer-display').textContent = e.target.value || '客戶簽名欄';
+  });
+
+  document.getElementById('f-promo').addEventListener('change', recalcTotals);
+});
+
+// ── Add Item Row ──────────────────────────────────────────────
+function addItem() {
+  const id = ++itemCount;
+  const tbody = document.getElementById('items-tbody');
+  const tr = document.createElement('tr');
+  tr.id = 'item-row-' + id;
+  tr.innerHTML = `
+    <td class="col-product">
+      <select id="item-product-${id}" onchange="onProductSelect(${id})">
+        <option value="">— 選擇產品 —</option>
+        ${PRODUCTS.map(p => `<option value="${p.id}">${p.id === 'P-014' ? '附加項目及備註（自由填寫）' : p.name}</option>`).join('')}
+      </select>
+    </td>
+    <td class="col-desc">
+      <input type="text" id="item-desc-${id}" placeholder="描述" oninput="recalcTotals()" />
+    </td>
+    <td class="col-price right">
+      <input type="number" id="item-price-${id}" placeholder="0" min="0" oninput="recalcRow(${id})" style="text-align:right" />
+    </td>
+    <td class="col-qty">
+      <input type="number" id="item-qty-${id}" value="1" min="1" oninput="recalcRow(${id})" style="text-align:right" />
+    </td>
+    <td class="subtotal col-sub" id="item-sub-${id}">NT$ 0</td>
+    <td class="delete col-del">
+      <button class="btn-delete" onclick="removeItem(${id})" title="刪除">×</button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function onProductSelect(id) {
+  const pId   = document.getElementById('item-product-' + id).value;
+  const prod  = PRODUCTS.find(p => p.id === pId);
+  if (!prod) return;
+
+  const isCustom = pId === 'P-014';
+  const descEl  = document.getElementById('item-desc-' + id);
+  const priceEl = document.getElementById('item-price-' + id);
+
+  descEl.value        = isCustom ? '' : prod.desc;
+  descEl.readOnly     = !isCustom;
+  priceEl.value       = isCustom ? '' : prod.price;
+  priceEl.readOnly    = !isCustom;
+
+  recalcRow(id);
+}
+
+function recalcRow(id) {
+  const price = parseFloat(document.getElementById('item-price-' + id).value) || 0;
+  const qty   = parseFloat(document.getElementById('item-qty-'   + id).value) || 0;
+  const sub   = price * qty;
+  document.getElementById('item-sub-' + id).textContent = 'NT$ ' + sub.toLocaleString();
+  recalcTotals();
+}
+
+function removeItem(id) {
+  const row = document.getElementById('item-row-' + id);
+  if (row) row.remove();
+  recalcTotals();
+}
+
+// ── Totals ────────────────────────────────────────────────────
+const PROMOS = {
+  'KAYON88':  { type:'percent', value:12 },
+  'OBA_LOVE': { type:'amount',  value:500 },
+};
+
+function recalcTotals() {
+  let subtotal = 0;
+  document.querySelectorAll('[id^="item-row-"]').forEach(row => {
+    const id    = row.id.replace('item-row-','');
+    const price = parseFloat(document.getElementById('item-price-'+id)?.value) || 0;
+    const qty   = parseFloat(document.getElementById('item-qty-'+id)?.value)   || 0;
+    subtotal   += price * qty;
+  });
+
+  const promoCode = document.getElementById('f-promo').value.trim().toUpperCase();
+  let discount = 0;
+  const promo  = PROMOS[promoCode];
+
+  if (promo) {
+    discount = promo.type === 'percent'
+      ? Math.round(subtotal * promo.value / 100)
+      : promo.value;
+    const tag = document.getElementById('promo-tag');
+    tag.textContent = promo.type === 'percent'
+      ? `${promo.value}% 折扣 已套用`
+      : `折扣 NT$ ${promo.value} 已套用`;
+    tag.style.display = 'inline';
+    document.getElementById('discount-row').style.display = 'flex';
+    document.getElementById('t-discount').textContent = `— NT$ ${discount.toLocaleString()}`;
+  } else {
+    document.getElementById('promo-tag').style.display = 'none';
+    document.getElementById('discount-row').style.display = 'none';
+  }
+
+  const taxBase = subtotal - discount;
+  const tax     = Math.round(taxBase * TAX_RATE);
+  const total   = taxBase + tax;
+
+  document.getElementById('t-subtotal').textContent = 'NT$ ' + subtotal.toLocaleString();
+  document.getElementById('t-tax').textContent      = 'NT$ ' + tax.toLocaleString();
+  document.getElementById('t-total').textContent    = 'NT$ ' + total.toLocaleString();
+}
+
+// ── Seal Upload ───────────────────────────────────────────────
+function loadSeal(input, imgId, b64Id) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById(imgId);
+    img.src          = e.target.result;
+    img.style.display = 'block';
+    document.getElementById(b64Id).value = e.target.result;
+    input.previousElementSibling && (input.previousElementSibling.style.display = 'none');
+    const hint = input.parentElement.querySelector('.seal-hint');
+    if (hint) hint.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Signature ─────────────────────────────────────────────────
+let sigCtx, sigDrawing = false, sigEmpty = true;
+
+function initSignature() {
+  const canvas = document.getElementById('sig-canvas');
+  const dpr    = window.devicePixelRatio || 1;
+  const rect   = canvas.getBoundingClientRect();
+  canvas.width  = rect.width  * dpr || 300;
+  canvas.height = 120 * dpr;
+  canvas.style.width  = '100%';
+  canvas.style.height = '120px';
+
+  sigCtx = canvas.getContext('2d');
+  sigCtx.scale(dpr, dpr);
+  sigCtx.strokeStyle = '#0e0e0e';
+  sigCtx.lineWidth   = 1.5;
+  sigCtx.lineCap     = 'round';
+  sigCtx.lineJoin    = 'round';
+
+  const getPos = e => {
+    const r = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: src.clientX - r.left, y: src.clientY - r.top };
+  };
+
+  canvas.addEventListener('mousedown',  e => { sigDrawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); });
+  canvas.addEventListener('mousemove',  e => { if (!sigDrawing) return; sigEmpty = false; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); });
+  canvas.addEventListener('mouseup',    () => { sigDrawing = false; });
+  canvas.addEventListener('mouseleave', () => { sigDrawing = false; });
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); sigDrawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); }, {passive:false});
+  canvas.addEventListener('touchmove',  e => { e.preventDefault(); if (!sigDrawing) return; sigEmpty = false; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); }, {passive:false});
+  canvas.addEventListener('touchend',   () => { sigDrawing = false; });
+}
+
+function clearSig() {
+  const canvas = document.getElementById('sig-canvas');
+  sigCtx.clearRect(0, 0, canvas.width, canvas.height);
+  sigEmpty = true;
+}
+
+function getSigData() {
+  if (sigEmpty) return '';
+  return document.getElementById('sig-canvas').toDataURL('image/png');
+}
+
+// ── Submit ────────────────────────────────────────────────────
+function submitQuotation() {
+  const customer = document.getElementById('f-customer').value.trim();
+  if (!customer) { showMsg('error', '請填寫客戶名稱'); return; }
+
+  // Collect items
+  const items = [];
+  document.querySelectorAll('[id^="item-row-"]').forEach(row => {
+    const id      = row.id.replace('item-row-','');
+    const pId     = document.getElementById('item-product-'+id)?.value;
+    const prod    = PRODUCTS.find(p => p.id === pId);
+    const name    = prod ? (pId === 'P-014' ? (document.getElementById('item-desc-'+id).value || '附加項目') : prod.name) : '';
+    const desc    = document.getElementById('item-desc-'+id)?.value  || '';
+    const price   = parseFloat(document.getElementById('item-price-'+id)?.value) || 0;
+    const qty     = parseFloat(document.getElementById('item-qty-'+id)?.value)   || 1;
+    if (pId && price > 0) {
+      items.push({
+        productId:   pId,
+        category:    prod ? prod.category : '',
+        productName: name,
+        description: desc,
+        unitPrice:   price,
+        quantity:    qty,
+      });
+    }
+  });
+
+  if (!items.length) { showMsg('error', '請至少新增一個品項'); return; }
+
+  const promoCode = document.getElementById('f-promo').value.trim().toUpperCase();
+
+  const payload = {
+    action:        'create_quotation',
+    customerName:  customer,
+    contactPerson: document.getElementById('f-contact').value,
+    phone:         document.getElementById('f-phone').value,
+    email:         document.getElementById('f-email').value,
+    owner:         document.getElementById('f-owner').value || 'KAYON',
+    projectName:   document.getElementById('f-project').value,
+    taxRate:       TAX_RATE,
+    deliveryDays:  parseInt(document.getElementById('f-days').value) || 0,
+    deliveryNote:  document.getElementById('f-days-note').value,
+    promoCode:     promoCode,
+    items:         items,
+    signature:     getSigData(),
+    companySeal:   document.getElementById('seal-large-b64').value,
+    companyStamp:  document.getElementById('seal-small-b64').value,
+  };
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled    = true;
+  btn.textContent = '處理中…';
+  hideMsg();
+
+  fetch(GAS_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body:    JSON.stringify(payload),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'ok') {
+      document.getElementById('display-quote-no').textContent = data.quoteNo;
+      showMsg('ok', `報價單 ${data.quoteNo} 建立成功　總計 NT$ ${Number(data.total).toLocaleString()}`);
+      btn.textContent = '已送出';
+    } else {
+      showMsg('error', data.message || '送出失敗，請再試一次');
+      btn.disabled    = false;
+      btn.textContent = '送出報價單';
+    }
+  })
+  .catch(() => {
+    showMsg('error', '網路錯誤，請稍後再試');
+    btn.disabled    = false;
+    btn.textContent = '送出報價單';
+  });
+}
+
+function showMsg(type, text) {
+  const el = document.getElementById('status-msg');
+  el.className    = 'status-msg ' + type;
+  el.textContent  = text;
+  el.style.display = 'block';
+}
+function hideMsg() {
+  document.getElementById('status-msg').style.display = 'none';
+}
+</script>
+</body>
+</html>
