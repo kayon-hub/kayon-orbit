@@ -297,71 +297,54 @@
     .sign-section {
       padding: 40px 56px;
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 32px;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+      gap: 16px;
       align-items: end;
+      border-top: 1px solid var(--line);
     }
-
-    .sign-block { display: flex; flex-direction: column; gap: 12px; }
-    .sign-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+    .sign-block { display: flex; flex-direction: column; gap: 10px; }
+    .sign-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
 
     /* Seal upload */
     .seal-upload {
-      width: 120px;
-      height: 120px;
-      border: 1px dashed var(--line);
-      border-radius: 50%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      transition: border-color .2s;
+      width: 90px; height: 90px;
+      border: 1px dashed var(--line); border-radius: 50%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; position: relative; overflow: hidden; transition: border-color .2s;
     }
     .seal-upload:hover { border-color: var(--gold); }
     .seal-upload input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-    .seal-upload .seal-hint { font-size: 10px; color: var(--line); letter-spacing: 1px; text-align: center; line-height: 1.5; pointer-events: none; }
+    .seal-upload .seal-hint { font-size: 9px; color: var(--line); text-align: center; line-height: 1.5; pointer-events: none; }
     .seal-upload img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; display: none; }
 
-    /* Signature canvas */
-    .sig-wrap {
-      border: 1px solid var(--line);
-      background: white;
-      position: relative;
+    /* Sig block */
+    .sig-tabs { display: flex; border: 1px solid var(--line); overflow: hidden; margin-bottom: 4px; }
+    .sig-tab {
+      flex: 1; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px;
+      padding: 5px 0; text-align: center; cursor: pointer; background: transparent;
+      border: none; color: var(--muted); border-right: 1px solid var(--line); transition: all .15s;
     }
-    canvas#sig-canvas {
-      display: block;
-      width: 100%;
-      height: 120px;
-      cursor: crosshair;
-      touch-action: none;
-    }
+    .sig-tab:last-child { border-right: none; }
+    .sig-tab.active { background: var(--ink); color: var(--paper); }
+    .sig-wrap { border: 1px solid var(--line); background: white; position: relative; }
+    .sig-canvas { display: block; width: 100%; height: 80px; cursor: crosshair; touch-action: none; }
     .sig-clear {
-      position: absolute;
-      top: 6px;
-      right: 8px;
-      font-size: 10px;
-      letter-spacing: 1px;
-      color: var(--line);
-      cursor: pointer;
-      background: none;
-      border: none;
-      font-family: 'DM Mono', monospace;
+      position: absolute; top: 4px; right: 6px; font-size: 9px; color: var(--line);
+      cursor: pointer; background: none; border: none; font-family: 'DM Mono', monospace;
     }
     .sig-clear:hover { color: var(--red); }
-    .sig-underline {
-      height: 1px;
-      background: var(--line);
-      margin-top: 12px;
+    .sig-upload-area {
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      height: 80px; border: 1px dashed var(--line); cursor: pointer; position: relative; transition: border-color .2s;
     }
-    .sig-name {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 6px;
-      letter-spacing: 1px;
-    }
+    .sig-upload-area:hover { border-color: var(--gold); }
+    .sig-upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .sig-upload-area img { max-height: 72px; max-width: 100%; object-fit: contain; display: none; }
+    .sig-upload-hint { font-size: 9px; color: var(--line); pointer-events: none; }
+    .sig-underline { height: 1px; background: var(--line); margin-top: 8px; }
+    .sig-name { font-size: 10px; color: var(--muted); margin-top: 4px; letter-spacing: 1px; }
+
+    @media (max-width: 768px) { .sign-section { grid-template-columns: 1fr 1fr; } }
 
     /* ── SUBMIT ── */
     .submit-section {
@@ -564,37 +547,89 @@
   <!-- SEALS & SIGNATURE -->
   <div class="sign-section">
 
-    <!-- Company Seal (大章) -->
+    <!-- 公司大章 -->
     <div class="sign-block">
       <div class="sign-label">公司大章</div>
-      <div class="seal-upload" id="seal-large-wrap">
+      <div class="seal-upload">
         <input type="file" accept="image/*" onchange="loadSeal(this,'seal-large-img','seal-large-b64')" />
-        <div class="seal-hint">點擊上傳<br/>PNG / JPG</div>
+        <div class="seal-hint">上傳<br/>PNG/JPG</div>
         <img id="seal-large-img" alt="大章" />
       </div>
       <input type="hidden" id="seal-large-b64" />
     </div>
 
-    <!-- Company Stamp (小章) -->
+    <!-- 公司小章 -->
     <div class="sign-block">
       <div class="sign-label">公司小章</div>
-      <div class="seal-upload" id="seal-small-wrap">
+      <div class="seal-upload">
         <input type="file" accept="image/*" onchange="loadSeal(this,'seal-small-img','seal-small-b64')" />
-        <div class="seal-hint">點擊上傳<br/>PNG / JPG</div>
+        <div class="seal-hint">上傳<br/>PNG/JPG</div>
         <img id="seal-small-img" alt="小章" />
       </div>
       <input type="hidden" id="seal-small-b64" />
     </div>
 
-    <!-- Signature -->
+    <!-- 業務簽名 -->
+    <div class="sign-block">
+      <div class="sign-label">業務簽名</div>
+      <div class="sig-tabs">
+        <button class="sig-tab active" onclick="switchSigTab('sales','draw')">手簽</button>
+        <button class="sig-tab" onclick="switchSigTab('sales','upload')">上傳</button>
+      </div>
+      <div id="sales-draw-wrap" class="sig-wrap">
+        <canvas id="sig-sales" class="sig-canvas"></canvas>
+        <button class="sig-clear" onclick="clearCanvas('sig-sales','sales')">清除</button>
+      </div>
+      <div id="sales-upload-wrap" class="sig-upload-area">
+        <input type="file" accept="image/*" onchange="loadSigUpload(this,'sales-upload-img','sig-sales-b64')" />
+        <img id="sales-upload-img" />
+        <span class="sig-upload-hint">點擊上傳簽名圖</span>
+      </div>
+      <input type="hidden" id="sig-sales-b64" />
+      <div class="sig-underline"></div>
+      <div class="sig-name" id="sales-name-display">業務</div>
+    </div>
+
+    <!-- 負責人簽名 -->
+    <div class="sign-block">
+      <div class="sign-label">負責人簽名</div>
+      <div class="sig-tabs">
+        <button class="sig-tab active" onclick="switchSigTab('owner','draw')">手簽</button>
+        <button class="sig-tab" onclick="switchSigTab('owner','upload')">上傳</button>
+      </div>
+      <div id="owner-draw-wrap" class="sig-wrap">
+        <canvas id="sig-owner" class="sig-canvas"></canvas>
+        <button class="sig-clear" onclick="clearCanvas('sig-owner','owner')">清除</button>
+      </div>
+      <div id="owner-upload-wrap" class="sig-upload-area">
+        <input type="file" accept="image/*" onchange="loadSigUpload(this,'owner-upload-img','sig-owner-b64')" />
+        <img id="owner-upload-img" />
+        <span class="sig-upload-hint">點擊上傳簽名圖</span>
+      </div>
+      <input type="hidden" id="sig-owner-b64" />
+      <div class="sig-underline"></div>
+      <div class="sig-name" id="owner-name-display">負責人</div>
+    </div>
+
+    <!-- 客戶簽名 -->
     <div class="sign-block">
       <div class="sign-label">客戶簽名</div>
-      <div class="sig-wrap">
-        <canvas id="sig-canvas" width="300" height="120"></canvas>
-        <button class="sig-clear" onclick="clearSig()">清除</button>
+      <div class="sig-tabs">
+        <button class="sig-tab active" onclick="switchSigTab('client','draw')">手簽</button>
+        <button class="sig-tab" onclick="switchSigTab('client','upload')">上傳</button>
       </div>
+      <div id="client-draw-wrap" class="sig-wrap">
+        <canvas id="sig-client" class="sig-canvas"></canvas>
+        <button class="sig-clear" onclick="clearCanvas('sig-client','client')">清除</button>
+      </div>
+      <div id="client-upload-wrap" class="sig-upload-area">
+        <input type="file" accept="image/*" onchange="loadSigUpload(this,'client-upload-img','sig-client-b64')" />
+        <img id="client-upload-img" />
+        <span class="sig-upload-hint">點擊上傳簽名圖</span>
+      </div>
+      <input type="hidden" id="sig-client-b64" />
       <div class="sig-underline"></div>
-      <div class="sig-name" id="f-customer-display">客戶簽名欄</div>
+      <div class="sig-name" id="f-customer-display">客戶</div>
     </div>
 
   </div>
@@ -774,48 +809,87 @@ function loadSeal(input, imgId, b64Id) {
 }
 
 // ── Signature ─────────────────────────────────────────────────
-let sigCtx, sigDrawing = false, sigEmpty = true;
+const sigState = { sales: { drawing:false, empty:true, ctx:null }, owner: { drawing:false, empty:true, ctx:null }, client: { drawing:false, empty:true, ctx:null } };
 
 function initSignature() {
-  const canvas = document.getElementById('sig-canvas');
-  const dpr    = window.devicePixelRatio || 1;
-  const rect   = canvas.getBoundingClientRect();
-  canvas.width  = rect.width  * dpr || 300;
-  canvas.height = 120 * dpr;
-  canvas.style.width  = '100%';
-  canvas.style.height = '120px';
+  ['sig-sales','sig-owner','sig-client'].forEach((id, i) => {
+    const key = ['sales','owner','client'][i];
+    initCanvas(id, key);
+  });
+}
 
-  sigCtx = canvas.getContext('2d');
-  sigCtx.scale(dpr, dpr);
-  sigCtx.strokeStyle = '#0e0e0e';
-  sigCtx.lineWidth   = 1.5;
-  sigCtx.lineCap     = 'round';
-  sigCtx.lineJoin    = 'round';
+function initCanvas(canvasId, key) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = (canvas.offsetWidth || 200) * dpr;
+  canvas.height = 80 * dpr;
+  canvas.style.height = '80px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.strokeStyle = '#0e0e0e';
+  ctx.lineWidth   = 1.5;
+  ctx.lineCap     = 'round';
+  ctx.lineJoin    = 'round';
+  sigState[key].ctx = ctx;
 
   const getPos = e => {
     const r = canvas.getBoundingClientRect();
     const src = e.touches ? e.touches[0] : e;
     return { x: src.clientX - r.left, y: src.clientY - r.top };
   };
-
-  canvas.addEventListener('mousedown',  e => { sigDrawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); });
-  canvas.addEventListener('mousemove',  e => { if (!sigDrawing) return; sigEmpty = false; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); });
-  canvas.addEventListener('mouseup',    () => { sigDrawing = false; });
-  canvas.addEventListener('mouseleave', () => { sigDrawing = false; });
-  canvas.addEventListener('touchstart', e => { e.preventDefault(); sigDrawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); }, {passive:false});
-  canvas.addEventListener('touchmove',  e => { e.preventDefault(); if (!sigDrawing) return; sigEmpty = false; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); }, {passive:false});
-  canvas.addEventListener('touchend',   () => { sigDrawing = false; });
+  canvas.addEventListener('mousedown',  e => { sigState[key].drawing=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); });
+  canvas.addEventListener('mousemove',  e => { if(!sigState[key].drawing) return; sigState[key].empty=false; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); });
+  canvas.addEventListener('mouseup',    () => { sigState[key].drawing=false; });
+  canvas.addEventListener('mouseleave', () => { sigState[key].drawing=false; });
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); sigState[key].drawing=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); },{passive:false});
+  canvas.addEventListener('touchmove',  e => { e.preventDefault(); if(!sigState[key].drawing) return; sigState[key].empty=false; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); },{passive:false});
+  canvas.addEventListener('touchend',   () => { sigState[key].drawing=false; });
 }
 
-function clearSig() {
-  const canvas = document.getElementById('sig-canvas');
-  sigCtx.clearRect(0, 0, canvas.width, canvas.height);
-  sigEmpty = true;
+function clearCanvas(canvasId, key) {
+  const canvas = document.getElementById(canvasId);
+  const s = sigState[key];
+  if (s && s.ctx) s.ctx.clearRect(0,0,canvas.width,canvas.height);
+  if (s) s.empty = true;
+  document.getElementById('sig-'+key+'-b64').value = '';
 }
 
-function getSigData() {
-  if (sigEmpty) return '';
-  return document.getElementById('sig-canvas').toDataURL('image/png');
+function switchSigTab(key, mode) {
+  const drawWrap   = document.getElementById(key+'-draw-wrap');
+  const uploadWrap = document.getElementById(key+'-upload-wrap');
+  const tabs = drawWrap.closest('.sign-block').querySelectorAll('.sig-tab');
+  tabs.forEach((t,i) => t.classList.toggle('active', (i===0&&mode==='draw')||(i===1&&mode==='upload')));
+  if (mode === 'draw') {
+    drawWrap.style.display   = 'block';
+    uploadWrap.style.display = 'none';
+  } else {
+    drawWrap.style.display   = 'none';
+    uploadWrap.style.display = 'flex';
+  }
+}
+
+function loadSigUpload(input, imgId, b64Id) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById(imgId);
+    img.src = e.target.result;
+    img.style.display = 'block';
+    document.getElementById(b64Id).value = e.target.result;
+    const hint = input.parentElement.querySelector('.sig-upload-hint');
+    if (hint) hint.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function getSigData(key) {
+  const b64 = document.getElementById('sig-'+key+'-b64').value;
+  if (b64) return b64;
+  const s = sigState[key];
+  if (s && !s.empty) return document.getElementById('sig-'+key).toDataURL('image/png');
+  return '';
 }
 
 // ── Submit ────────────────────────────────────────────────────
@@ -862,7 +936,9 @@ function submitQuotation() {
     deliveryNote:  document.getElementById('f-days-note').value,
     promoCode:     promoCode,
     items:         items,
-    signature:     getSigData(),
+    sigSales:      getSigData('sales'),
+    sigOwner:      getSigData('owner'),
+    signature:     getSigData('client'),
     companySeal:   document.getElementById('seal-large-b64').value,
     companyStamp:  document.getElementById('seal-small-b64').value,
   };
