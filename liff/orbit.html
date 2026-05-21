@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KARBØN X GAIA • ORBIT</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/line-liff/2.0.0/liff.min.js"></script>
+  <style>
+    body { margin:0; padding:0; background:#05050a; color:white; font-family:system-ui; min-height:100vh; }
+    .glass { background: rgba(10,10,20,0.75); backdrop-filter: blur(20px); border: 1px solid rgba(103,232,249,0.3); border-radius: 24px; padding: 24px; margin: 16px; }
+    button { width:100%; padding:24px; font-size:26px; background:#67e8f9; color:#000; border:none; border-radius:20px; font-weight:bold; }
+  </style>
+</head>
+<body>
+  <div class="glass">
+    <h1 style="font-size:28px; background:linear-gradient(to right,#67e8f9,#c084fc); -webkit-background-clip:text; color:transparent; margin:0 0 8px 0;">
+      KARBØN X GAIA • ORBIT
+    </h1>
+    <p id="greeting" style="color:#67e8f9; margin:0 0 20px 0; font-size:18px;"></p>
+
+    <button onclick="clockIn()">📍 現在打卡</button>
+
+    <div id="status" style="margin-top:24px; text-align:center; color:#67e8f9; font-size:17px; white-space:pre-line;"></div>
+  </div>
+
+  <script>
+    async function init() {
+      await liff.init({ liffId: "2010149593-DyntMxoX" });
+      if (liff.isLoggedIn()) {
+        const profile = await liff.getProfile();
+        document.getElementById('greeting').innerHTML = `Hi, ${profile.displayName} 👋`;
+      } else {
+        liff.login();
+      }
+    }
+
+    function clockIn() {
+      navigator.geolocation.getCurrentPosition(p => {
+        document.getElementById('status').innerHTML = `✅ 打卡成功！<br>位置已記錄<br>${p.coords.latitude.toFixed(5)}, ${p.coords.longitude.toFixed(5)}`;
+      }, () => {
+        document.getElementById('status').innerHTML = '❌ 請在手機上允許定位權限';
+      });
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
