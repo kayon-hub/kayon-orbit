@@ -462,9 +462,57 @@
       .submit-section { padding: 24px; }
       .payment-methods { flex-direction:column; gap:12px; }
     }
+
+    /* ── CLIENT MODE ── */
+    .client-mode-bar {
+      background: #0e0e0e; color: #f5f2ec;
+      padding: 12px 56px; font-size: 11px; letter-spacing: 3px;
+      text-transform: uppercase; display: flex; align-items: center; gap: 12px;
+    }
+    .client-mode-bar .dot { width:8px;height:8px;border-radius:50%;background:#b8976a;flex-shrink:0; }
+
+    .field-readonly input,
+    .field-readonly select { pointer-events:none; color:#555; border-bottom-color:#e8e4da; }
+
+    .items-table.readonly td input,
+    .items-table.readonly td select { pointer-events:none; color:#555; }
+    .items-table.readonly .btn-delete { display:none; }
+    .items-table.readonly .btn-add-item { display:none; }
+
+    /* 客戶模式下隱藏業務簽名 + 負責人簽名，只顯示客戶簽名 */
+    body.client-mode .sign-block-sales,
+    body.client-mode .sign-block-owner { display:none; }
+    body.client-mode .sign-block-seals { display:none; }
+
+    /* 客戶連結產生區塊 */
+    .link-box {
+      background: #f5f2ec; border: 1px solid #d0cab8;
+      padding: 20px 24px; margin-top: 16px;
+      display: none; flex-direction: column; gap: 12px;
+    }
+    .link-box.show { display: flex; }
+    .link-box-label { font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#888; }
+    .link-url {
+      font-size:11px;color:#0e0e0e;letter-spacing:1px;word-break:break-all;
+      background:#fff;border:1px solid #d0cab8;padding:10px 14px;
+    }
+    .link-actions { display:flex;gap:12px; }
+    .btn-copy {
+      font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;
+      padding:8px 16px;border:1px solid #0e0e0e;background:transparent;
+      cursor:pointer;transition:all .15s;
+    }
+    .btn-copy:hover { background:#0e0e0e;color:#f5f2ec; }
+    .btn-copy.copied { background:#2d6a4f;color:#fff;border-color:#2d6a4f; }
   </style>
 </head>
 <body>
+
+<!-- CLIENT MODE BAR (shown only in client mode) -->
+<div class="client-mode-bar" id="client-mode-bar" style="display:none">
+  <div class="dot"></div>
+  <span>客戶簽名模式 — 本報價單內容已鎖定，請於下方完成簽名後送出確認</span>
+</div>
 
 <div class="document" id="doc">
 
@@ -649,7 +697,7 @@
   <div class="sign-section">
 
     <!-- 客戶簽名 -->
-    <div class="sign-block">
+    <div class="sign-block sign-block-client">
       <div class="sign-label">客戶簽名</div>
       <div class="sig-tabs">
         <button class="sig-tab active" onclick="switchSigTab('client','draw')">手簽</button>
@@ -670,7 +718,7 @@
     </div>
 
     <!-- 業務簽名 -->
-    <div class="sign-block">
+    <div class="sign-block sign-block-sales">
       <div class="sign-label">業務簽名</div>
       <div class="sig-tabs">
         <button class="sig-tab active" onclick="switchSigTab('sales','draw')">手簽</button>
@@ -691,7 +739,7 @@
     </div>
 
     <!-- 負責人簽名 -->
-    <div class="sign-block">
+    <div class="sign-block sign-block-owner">
       <div class="sign-label">負責人簽名</div>
       <div class="sig-tabs">
         <button class="sig-tab active" onclick="switchSigTab('owner','draw')">手簽</button>
@@ -712,7 +760,7 @@
     </div>
 
     <!-- 公司小章 -->
-    <div class="sign-block">
+    <div class="sign-block sign-block-seals">
       <div class="sign-label">公司小章</div>
       <div class="seal-upload">
         <input type="file" accept="image/*" onchange="loadSeal(this,'seal-small-img','seal-small-b64')" />
@@ -723,7 +771,7 @@
     </div>
 
     <!-- 公司大章 -->
-    <div class="sign-block">
+    <div class="sign-block sign-block-seals">
       <div class="sign-label">公司大章</div>
       <div class="seal-upload">
         <input type="file" accept="image/*" onchange="loadSeal(this,'seal-large-img','seal-large-b64')" />
@@ -738,8 +786,26 @@
   <!-- SUBMIT -->
   <div class="submit-section">
     <div class="status-msg" id="status-msg"></div>
-    <button class="btn-submit" id="btn-submit" onclick="submitQuotation()">送出報價單</button>
-    <div class="submit-note">送出後將自動產生報價單編號並存入系統</div>
+
+    <!-- 業務模式送出 -->
+    <div id="staff-submit-area">
+      <button class="btn-submit" id="btn-submit" onclick="submitQuotation()">送出報價單</button>
+      <div class="submit-note">送出後將自動產生報價單編號，並寄送簽名連結給客戶</div>
+      <!-- 客戶連結 -->
+      <div class="link-box" id="link-box">
+        <div class="link-box-label">客戶簽名連結</div>
+        <div class="link-url" id="link-url-text">—</div>
+        <div class="link-actions">
+          <button class="btn-copy" id="btn-copy" onclick="copyLink()">複製連結</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 客戶模式送出 -->
+    <div id="client-submit-area" style="display:none;flex-direction:column;align-items:center;gap:12px">
+      <button class="btn-submit" id="btn-client-submit" onclick="submitClientSign()">確認並送出簽名</button>
+      <div class="submit-note">送出後將通知 KAYON STUDIO 進行最終確認</div>
+    </div>
   </div>
 
 </div><!-- /document -->
@@ -749,7 +815,12 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbytDkvfXSFIhOxOQKx8LAOt
 
 const TAX_RATE = 0.05;
 const CARD_RATE = 0.028;
-let taxMode = 'inc'; // 'inc' = 含稅, 'exc' = 未含稅
+let taxMode = 'inc';
+
+// ── Mode Detection ────────────────────────────────────────────
+const urlParams  = new URLSearchParams(window.location.search);
+const PAGE_MODE  = urlParams.get('mode') || 'staff'; // 'staff' | 'sign'
+const QUOTE_ID   = urlParams.get('id')   || ''; // 'inc' = 含稅, 'exc' = 未含稅
 
 function setTaxMode(mode) {
   taxMode = mode;
@@ -796,15 +867,108 @@ window.addEventListener('DOMContentLoaded', () => {
     String(today.getMonth()+1).padStart(2,'0') + '.' +
     String(today.getDate()).padStart(2,'0');
 
-  addItem(); // 預設一行
-  initSignature();
+  if (PAGE_MODE === 'sign' && QUOTE_ID) {
+    initClientMode();
+  } else {
+    addItem();
+    initSignature();
+    document.getElementById('f-customer').addEventListener('input', e => {
+      document.getElementById('f-customer-display').textContent = e.target.value || '客戶';
+    });
+    document.getElementById('f-promo').addEventListener('change', recalcTotals);
+  }
+});
 
-  document.getElementById('f-customer').addEventListener('input', e => {
-    document.getElementById('f-customer-display').textContent = e.target.value || '客戶簽名欄';
+// ── Client Mode Init ──────────────────────────────────────────
+function initClientMode() {
+  document.body.classList.add('client-mode');
+  document.getElementById('client-mode-bar').style.display = 'flex';
+  document.getElementById('staff-submit-area').style.display = 'none';
+  document.getElementById('client-submit-area').style.display = 'flex';
+
+  // Lock all inputs except client signature
+  document.querySelectorAll('.section input, .section select, .section textarea').forEach(el => {
+    el.readOnly   = true;
+    el.disabled   = true;
+    el.style.pointerEvents = 'none';
+    el.style.color = '#555';
+  });
+  document.querySelectorAll('.btn-delete, .btn-add-item').forEach(el => el.style.display = 'none');
+
+  // Load quote data from GAS
+  showMsg('ok', '載入報價單資料中…');
+  callGAS({ action: 'get_quotation', quoteNo: QUOTE_ID }).then(data => {
+    hideMsg();
+    if (data.status === 'ok' && data.data) {
+      populateQuoteData(data.data);
+    } else {
+      showMsg('error', '找不到報價單 ' + QUOTE_ID);
+    }
+  }).catch(() => showMsg('error', '網路錯誤，請稍後再試'));
+
+  // Init only client signature canvas
+  initSignature();
+}
+
+function populateQuoteData(q) {
+  // Fill read-only display fields
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  set('f-customer', q.customerName);
+  set('f-owner',    q.owner);
+  set('f-days',     q.deliveryDays);
+  document.getElementById('display-quote-no').textContent = q.quoteNo;
+  document.getElementById('f-customer-display').textContent = q.customerName || '客戶';
+
+  // Fill items
+  const tbody = document.getElementById('items-tbody');
+  tbody.innerHTML = '';
+  (q.items || []).forEach(item => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="col-product" style="font-size:12px">${item.productName || ''}</td>
+      <td class="col-desc" style="font-size:12px">${item.description || ''}</td>
+      <td class="col-price right" style="font-size:12px">NT$ ${Number(item.unitPrice).toLocaleString()}</td>
+      <td class="col-qty" style="font-size:12px;text-align:right">${item.quantity}</td>
+      <td class="subtotal col-sub" style="font-size:12px">NT$ ${Number(item.subtotal).toLocaleString()}</td>
+      <td class="col-del"></td>
+    `;
+    tbody.appendChild(tr);
   });
 
-  document.getElementById('f-promo').addEventListener('change', recalcTotals);
-});
+  // Fill totals
+  document.getElementById('t-total').textContent = 'NT$ ' + Number(q.total).toLocaleString();
+}
+
+// ── Client Sign Submit ────────────────────────────────────────
+function submitClientSign() {
+  const sig = getSigData('client');
+  if (!sig) { showMsg('error', '請先在簽名欄完成簽名'); return; }
+
+  const btn = document.getElementById('btn-client-submit');
+  btn.disabled = true;
+  btn.textContent = '送出中…';
+
+  callGAS({
+    action:       'client_sign',
+    quoteNo:      QUOTE_ID,
+    signature:    sig,
+    customerName: document.getElementById('f-customer')?.value || '',
+    email:        document.getElementById('f-email')?.value    || '',
+  }).then(data => {
+    if (data.status === 'ok') {
+      showMsg('ok', '簽名已送出！KAYON STUDIO 將盡快完成最終確認。');
+      btn.textContent = '已送出';
+    } else {
+      showMsg('error', data.message || '送出失敗');
+      btn.disabled    = false;
+      btn.textContent = '確認並送出簽名';
+    }
+  }).catch(() => {
+    showMsg('error', '網路錯誤，請稍後再試');
+    btn.disabled    = false;
+    btn.textContent = '確認並送出簽名';
+  });
+}
 
 // ── Add Item Row ──────────────────────────────────────────────
 function addItem() {
@@ -1125,6 +1289,10 @@ function submitQuotation() {
       document.getElementById('display-quote-no').textContent = data.quoteNo;
       showMsg('ok', `報價單 ${data.quoteNo} 建立成功　總計 NT$ ${Number(data.total).toLocaleString()}`);
       btn.textContent = '已送出';
+      // 顯示客戶簽名連結
+      const signUrl = `https://kayon-hub.github.io/kayon-orbit/quotation.html?mode=sign&id=${data.quoteNo}`;
+      document.getElementById('link-url-text').textContent = signUrl;
+      document.getElementById('link-box').classList.add('show');
     } else {
       showMsg('error', data.message || '送出失敗，請再試一次');
       btn.disabled    = false;
@@ -1146,6 +1314,24 @@ function showMsg(type, text) {
 }
 function hideMsg() {
   document.getElementById('status-msg').style.display = 'none';
+}
+
+function copyLink() {
+  const url = document.getElementById('link-url-text').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '已複製 ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '複製連結'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function callGAS(body) {
+  return fetch(GAS_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body:    JSON.stringify(body),
+  }).then(r => r.json());
 }
 </script>
 </body>
