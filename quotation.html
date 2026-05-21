@@ -318,7 +318,7 @@
     /* Seal upload */
     .seal-upload {
       width: 90px; height: 90px;
-      border: 1px dashed var(--line); border-radius: 50%;
+      border: 1px dashed var(--line); border-radius: 4px;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       cursor: pointer; position: relative; overflow: hidden; transition: border-color .2s;
     }
@@ -326,6 +326,12 @@
     .seal-upload input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
     .seal-upload .seal-hint { font-size: 9px; color: var(--line); text-align: center; line-height: 1.5; pointer-events: none; }
     .seal-upload img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; display: none; }
+    .seal-remove {
+      position: absolute; top: 3px; right: 5px; font-size: 11px; color: var(--line);
+      cursor: pointer; background: none; border: none; font-family: 'DM Mono', monospace;
+      z-index: 2; pointer-events: all;
+    }
+    .seal-remove:hover { color: var(--red); }
 
     /* Sig block */
     .sig-tabs { display: flex; border: 1px solid var(--line); overflow: hidden; margin-bottom: 4px; }
@@ -479,9 +485,9 @@
     .items-table.readonly .btn-delete { display:none; }
     .items-table.readonly .btn-add-item { display:none; }
 
-    /* 客戶模式下隱藏業務簽名 + 負責人簽名，只顯示客戶簽名 */
+    /* 客戶模式下隱藏業務簽名 + 負責人簽名 + 我方章，只顯示客戶相關 */
     body.client-mode .sign-block-sales,
-    body.client-mode .sign-block-owner { display:none; }
+    body.client-mode .sign-block-owner,
     body.client-mode .sign-block-seals { display:none; }
 
     /* 客戶連結產生區塊 */
@@ -694,7 +700,7 @@
   </div>
 
   <!-- SEALS & SIGNATURE -->
-  <div class="sign-section">
+  <div class="sign-section" style="grid-template-columns:repeat(7,1fr);gap:12px">
 
     <!-- 客戶簽名 -->
     <div class="sign-block sign-block-client">
@@ -710,11 +716,35 @@
       <div id="client-upload-wrap" class="sig-upload-area">
         <input type="file" accept="image/*" onchange="loadSigUpload(this,'client-upload-img','sig-client-b64')" />
         <img id="client-upload-img" />
-        <span class="sig-upload-hint">點擊上傳簽名圖</span>
+        <span class="sig-upload-hint">點擊上傳</span>
       </div>
       <input type="hidden" id="sig-client-b64" />
       <div class="sig-underline"></div>
       <div class="sig-name" id="f-customer-display">客戶</div>
+    </div>
+
+    <!-- 客戶小章 -->
+    <div class="sign-block sign-block-client">
+      <div class="sign-label">客戶小章</div>
+      <div class="seal-upload" id="csmall-wrap">
+        <input type="file" accept="image/*" onchange="loadSeal(this,'csmall-img','csmall-b64','csmall-wrap')" />
+        <div class="seal-hint">上傳<br/>PNG/JPG</div>
+        <img id="csmall-img" alt="客戶小章" />
+        <button class="seal-remove" onclick="removeSeal('csmall-img','csmall-b64','csmall-wrap',event)">×</button>
+      </div>
+      <input type="hidden" id="csmall-b64" />
+    </div>
+
+    <!-- 客戶大章 -->
+    <div class="sign-block sign-block-client">
+      <div class="sign-label">客戶大章</div>
+      <div class="seal-upload" id="clarge-wrap">
+        <input type="file" accept="image/*" onchange="loadSeal(this,'clarge-img','clarge-b64','clarge-wrap')" />
+        <div class="seal-hint">上傳<br/>PNG/JPG</div>
+        <img id="clarge-img" alt="客戶大章" />
+        <button class="seal-remove" onclick="removeSeal('clarge-img','clarge-b64','clarge-wrap',event)">×</button>
+      </div>
+      <input type="hidden" id="clarge-b64" />
     </div>
 
     <!-- 業務簽名 -->
@@ -731,7 +761,7 @@
       <div id="sales-upload-wrap" class="sig-upload-area">
         <input type="file" accept="image/*" onchange="loadSigUpload(this,'sales-upload-img','sig-sales-b64')" />
         <img id="sales-upload-img" />
-        <span class="sig-upload-hint">點擊上傳簽名圖</span>
+        <span class="sig-upload-hint">點擊上傳</span>
       </div>
       <input type="hidden" id="sig-sales-b64" />
       <div class="sig-underline"></div>
@@ -752,31 +782,33 @@
       <div id="owner-upload-wrap" class="sig-upload-area">
         <input type="file" accept="image/*" onchange="loadSigUpload(this,'owner-upload-img','sig-owner-b64')" />
         <img id="owner-upload-img" />
-        <span class="sig-upload-hint">點擊上傳簽名圖</span>
+        <span class="sig-upload-hint">點擊上傳</span>
       </div>
       <input type="hidden" id="sig-owner-b64" />
       <div class="sig-underline"></div>
       <div class="sig-name" id="owner-name-display">負責人</div>
     </div>
 
-    <!-- 公司小章 -->
+    <!-- 我方小章 -->
     <div class="sign-block sign-block-seals">
-      <div class="sign-label">公司小章</div>
-      <div class="seal-upload">
-        <input type="file" accept="image/*" onchange="loadSeal(this,'seal-small-img','seal-small-b64')" />
+      <div class="sign-label">我方小章</div>
+      <div class="seal-upload" id="seal-small-wrap">
+        <input type="file" accept="image/*" onchange="loadSeal(this,'seal-small-img','seal-small-b64','seal-small-wrap')" />
         <div class="seal-hint">上傳<br/>PNG/JPG</div>
         <img id="seal-small-img" alt="小章" />
+        <button class="seal-remove" onclick="removeSeal('seal-small-img','seal-small-b64','seal-small-wrap',event)">×</button>
       </div>
       <input type="hidden" id="seal-small-b64" />
     </div>
 
-    <!-- 公司大章 -->
+    <!-- 我方大章 -->
     <div class="sign-block sign-block-seals">
-      <div class="sign-label">公司大章</div>
-      <div class="seal-upload">
-        <input type="file" accept="image/*" onchange="loadSeal(this,'seal-large-img','seal-large-b64')" />
+      <div class="sign-label">我方大章</div>
+      <div class="seal-upload" id="seal-large-wrap">
+        <input type="file" accept="image/*" onchange="loadSeal(this,'seal-large-img','seal-large-b64','seal-large-wrap')" />
         <div class="seal-hint">上傳<br/>PNG/JPG</div>
         <img id="seal-large-img" alt="大章" />
+        <button class="seal-remove" onclick="removeSeal('seal-large-img','seal-large-b64','seal-large-wrap',event)">×</button>
       </div>
       <input type="hidden" id="seal-large-b64" />
     </div>
@@ -1120,20 +1152,34 @@ function recalcTotals() {
 }
 
 // ── Seal Upload ───────────────────────────────────────────────
-function loadSeal(input, imgId, b64Id) {
+function loadSeal(input, imgId, b64Id, wrapId) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
     const img = document.getElementById(imgId);
-    img.src          = e.target.result;
+    img.src = e.target.result;
     img.style.display = 'block';
     document.getElementById(b64Id).value = e.target.result;
-    input.previousElementSibling && (input.previousElementSibling.style.display = 'none');
-    const hint = input.parentElement.querySelector('.seal-hint');
+    const wrap = wrapId ? document.getElementById(wrapId) : input.parentElement;
+    const hint = wrap.querySelector('.seal-hint');
     if (hint) hint.style.display = 'none';
+    const removeBtn = wrap.querySelector('.seal-remove');
+    if (removeBtn) removeBtn.style.display = 'block';
   };
   reader.readAsDataURL(file);
+}
+
+function removeSeal(imgId, b64Id, wrapId, e) {
+  e.preventDefault(); e.stopPropagation();
+  const img = document.getElementById(imgId);
+  img.src = ''; img.style.display = 'none';
+  document.getElementById(b64Id).value = '';
+  const wrap = document.getElementById(wrapId);
+  const hint = wrap.querySelector('.seal-hint');
+  if (hint) hint.style.display = 'block';
+  const removeBtn = wrap.querySelector('.seal-remove');
+  if (removeBtn) removeBtn.style.display = 'none';
 }
 
 // ── Signature ─────────────────────────────────────────────────
@@ -1269,8 +1315,10 @@ function submitQuotation() {
     payMethod:     document.querySelector('input[name="pay-method"]:checked')?.value || 'transfer',
     taxMode:       taxMode,
     signature:     getSigData('client'),
-    companySeal:   document.getElementById('seal-large-b64').value,
-    companyStamp:  document.getElementById('seal-small-b64').value,
+    ourSealLarge:    document.getElementById('seal-large-b64').value,
+    ourSealSmall:    document.getElementById('seal-small-b64').value,
+    clientSealLarge: document.getElementById('clarge-b64').value,
+    clientSealSmall: document.getElementById('csmall-b64').value,
   };
 
   const btn = document.getElementById('btn-submit');
