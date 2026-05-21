@@ -703,7 +703,7 @@
   <div class="sign-section" style="grid-template-columns:repeat(7,1fr);gap:12px">
 
     <!-- 客戶簽名 -->
-    <div class="sign-block sign-block-client">
+    <div class="sign-block sign-block-client" id="client-sig-block" style="display:none">
       <div class="sign-label">客戶簽名</div>
       <div class="sig-tabs">
         <button class="sig-tab active" onclick="switchSigTab('client','draw')">手簽</button>
@@ -724,7 +724,7 @@
     </div>
 
     <!-- 客戶小章 -->
-    <div class="sign-block sign-block-client">
+    <div class="sign-block sign-block-client" id="client-seal-small-block" style="display:none">
       <div class="sign-label">客戶小章</div>
       <div class="seal-upload" id="csmall-wrap">
         <input type="file" accept="image/*" onchange="loadSeal(this,'csmall-img','csmall-b64','csmall-wrap')" />
@@ -736,7 +736,7 @@
     </div>
 
     <!-- 客戶大章 -->
-    <div class="sign-block sign-block-client">
+    <div class="sign-block sign-block-client" id="client-seal-large-block" style="display:none">
       <div class="sign-label">客戶大章</div>
       <div class="seal-upload" id="clarge-wrap">
         <input type="file" accept="image/*" onchange="loadSeal(this,'clarge-img','clarge-b64','clarge-wrap')" />
@@ -918,14 +918,38 @@ function initClientMode() {
   document.getElementById('staff-submit-area').style.display = 'none';
   document.getElementById('client-submit-area').style.display = 'flex';
 
-  // Lock all inputs except client signature
+  // Show client signature + seal blocks
+  ['client-sig-block','client-seal-small-block','client-seal-large-block'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'flex';
+  });
+
+  // Hide add item / delete buttons
+  document.querySelectorAll('.btn-delete, .btn-add-item').forEach(el => el.style.display = 'none');
+
+  // Lock all form inputs (sections)
   document.querySelectorAll('.section input, .section select, .section textarea').forEach(el => {
-    el.readOnly   = true;
-    el.disabled   = true;
+    el.readOnly = true;
+    el.disabled = true;
     el.style.pointerEvents = 'none';
     el.style.color = '#555';
   });
-  document.querySelectorAll('.btn-delete, .btn-add-item').forEach(el => el.style.display = 'none');
+
+  // Show sales/owner sig blocks as readonly display (already signed by staff)
+  // Sales and owner canvases are shown but locked - will be populated from GAS data
+  document.querySelectorAll('.sign-block-sales, .sign-block-owner').forEach(el => {
+    el.style.display = 'flex';
+    // Lock their canvases and hide tabs
+    el.querySelectorAll('.sig-tabs, .sig-clear, .sig-upload-area').forEach(b => b.style.display = 'none');
+    el.querySelectorAll('.sig-canvas').forEach(c => c.style.pointerEvents = 'none');
+  });
+
+  // Show our seals readonly
+  document.querySelectorAll('.sign-block-seals').forEach(el => {
+    el.style.display = 'flex';
+    el.querySelectorAll('input[type=file], .seal-remove').forEach(b => b.style.display = 'none');
+    el.querySelectorAll('.seal-hint').forEach(h => h.style.display = 'none');
+  });
 
   // Load quote data from GAS
   showMsg('ok', '載入報價單資料中…');
@@ -938,18 +962,36 @@ function initClientMode() {
     }
   }).catch(() => showMsg('error', '網路錯誤，請稍後再試'));
 
-  // Init only client signature canvas
+  // Init client signature canvas only
   initSignature();
 }
 
 function populateQuoteData(q) {
-  // Fill read-only display fields
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
   set('f-customer', q.customerName);
   set('f-owner',    q.owner);
   set('f-days',     q.deliveryDays);
-  document.getElementById('display-quote-no').textContent = q.quoteNo;
+  document.getElementById('display-quote-no').textContent = q.quoteNo || QUOTE_ID;
   document.getElementById('f-customer-display').textContent = q.customerName || '客戶';
+
+  // Sales / owner name
+  const salesName = document.getElementById('sales-name-display');
+  const ownerName = document.getElementById('owner-name-display');
+  if (salesName) salesName.textContent = q.owner || '業務';
+  if (ownerName) ownerName.textContent = 'KAYON';
+
+  // Restore sales signature image if saved
+  if (q.sigSales) {
+    const img = document.getElementById('sales-upload-img');
+    const wrap = document.getElementById('sales-draw-wrap');
+    if (img && wrap) {
+      wrap.innerHTML = `<img src="${q.sigSales}" style="max-height:80px;max-width:100%;object-fit:contain" />`;
+    }
+  }
+
+  // Restore our seals
+  if (q.ourSealSmall) restoreSealImg('seal-small-img', q.ourSealSmall);
+  if (q.ourSealLarge) restoreSealImg('seal-large-img', q.ourSealLarge);
 
   // Fill items
   const tbody = document.getElementById('items-tbody');
@@ -967,8 +1009,17 @@ function populateQuoteData(q) {
     tbody.appendChild(tr);
   });
 
-  // Fill totals
   document.getElementById('t-total').textContent = 'NT$ ' + Number(q.total).toLocaleString();
+}
+
+function restoreSealImg(imgId, src) {
+  const img = document.getElementById(imgId);
+  if (img) { img.src = src; img.style.display = 'block'; }
+  const wrap = img ? img.closest('.seal-upload') : null;
+  if (wrap) {
+    const hint = wrap.querySelector('.seal-hint');
+    if (hint) hint.style.display = 'none';
+  }
 }
 
 // ── Client Sign Submit ────────────────────────────────────────
