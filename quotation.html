@@ -421,6 +421,37 @@
       display: none;
     }
 
+    /* ── TAX TOGGLE ── */
+    .tax-toggle-wrap { display:inline-flex; border:1px solid var(--line); overflow:hidden; margin-left:4px; }
+    .tax-btn {
+      font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1px;
+      padding:3px 10px; background:transparent; border:none; color:var(--muted);
+      cursor:pointer; border-right:1px solid var(--line); transition:all .15s;
+    }
+    .tax-btn:last-child { border-right:none; }
+    .tax-btn.active { background:var(--ink); color:var(--paper); }
+
+    /* ── PAYMENT ── */
+    .payment-methods { display:flex; gap:24px; flex-wrap:wrap; margin-bottom:16px; }
+    .pay-option {
+      display:flex; align-items:center; gap:8px; font-size:12px;
+      color:var(--ink); cursor:pointer; letter-spacing:1px;
+    }
+    .pay-option input[type=radio] { accent-color:var(--ink); cursor:pointer; }
+    .pay-info-block {
+      background:var(--cream); border:1px solid var(--line);
+      padding:16px 20px; display:flex; flex-direction:column; gap:10px;
+      max-width:480px;
+    }
+    .pay-info-row {
+      display:flex; gap:16px; font-size:12px; align-items:baseline;
+    }
+    .pay-info-row span:first-child {
+      font-size:9px; letter-spacing:2px; text-transform:uppercase;
+      color:var(--muted); min-width:48px;
+    }
+    .pay-info-row span:last-child { font-weight:400; letter-spacing:1px; }
+
     @media (max-width: 640px) {
       .doc-header { grid-template-columns: 1fr; }
       .doc-title-block { text-align: left; }
@@ -429,6 +460,7 @@
       .section { padding: 24px 24px; }
       .doc-header { padding: 32px 24px 24px; }
       .submit-section { padding: 24px; }
+      .payment-methods { flex-direction:column; gap:12px; }
     }
   </style>
 </head>
@@ -501,15 +533,22 @@
     <!-- TOTALS -->
     <div class="totals">
       <div class="total-row">
-        <span class="label">未稅金額</span>
+        <span class="label">小計</span>
         <span class="value" id="t-subtotal">NT$ 0</span>
       </div>
       <div class="total-row" id="discount-row" style="display:none">
         <span class="label">折扣</span>
         <span class="value discount" id="t-discount">— NT$ 0</span>
       </div>
-      <div class="total-row">
-        <span class="label">營業稅（5%）</span>
+      <!-- 含稅切換 -->
+      <div class="total-row" style="align-items:center">
+        <span class="label" style="display:flex;align-items:center;gap:8px">
+          稅金（5%）
+          <span class="tax-toggle-wrap">
+            <button class="tax-btn active" id="tax-btn-inc" onclick="setTaxMode('inc')">含稅</button>
+            <button class="tax-btn" id="tax-btn-exc" onclick="setTaxMode('exc')">未含稅</button>
+          </span>
+        </span>
         <span class="value" id="t-tax">NT$ 0</span>
       </div>
       <div class="total-final">
@@ -541,14 +580,66 @@
         <input type="text" id="f-days-note" placeholder="訂金確認後N個工作天完成" />
       </div>
     </div>
+
+    <!-- 付款方式 -->
+    <div style="margin-top:28px">
+      <div class="section-label" style="margin-bottom:14px">付款方式</div>
+      <div class="payment-methods">
+        <label class="pay-option">
+          <input type="radio" name="pay-method" value="cash" onchange="onPayMethod()" /> 現金
+        </label>
+        <label class="pay-option">
+          <input type="radio" name="pay-method" value="transfer" onchange="onPayMethod()" checked /> 銀行轉帳
+        </label>
+        <label class="pay-option">
+          <input type="radio" name="pay-method" value="card" onchange="onPayMethod()" /> 刷卡（加收 2.8%）
+        </label>
+      </div>
+
+      <!-- 轉帳資訊 -->
+      <div id="pay-transfer-info" class="pay-info-block">
+        <div class="pay-info-row"><span>銀行</span><span>國泰世華銀行 (013) 竹城分行</span></div>
+        <div class="pay-info-row"><span>戶名</span><span>洪曜騏</span></div>
+        <div class="pay-info-row"><span>帳號</span><span>2105-0630-7630</span></div>
+      </div>
+
+      <!-- 刷卡說明 -->
+      <div id="pay-card-info" class="pay-info-block" style="display:none">
+        <div class="pay-info-row"><span>手續費</span><span>加收 2.8%（訂金與尾款各別計算）</span></div>
+        <div class="pay-info-row"><span>付款方式</span><span>業務將另行提供 Pro360 付款連結</span></div>
+        <div class="total-row" style="margin-top:8px;justify-content:flex-end">
+          <span class="label" style="font-size:10px">含刷卡手續費總計</span>
+          <span class="value" id="t-card-total" style="font-size:14px;color:var(--gold)">NT$ 0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 付款條件 & 注意事項 -->
     <div style="margin-top:24px">
-      <div class="section-label" style="margin-bottom:12px">付款條件</div>
+      <div class="section-label" style="margin-bottom:12px">付款條件與注意事項</div>
       <div class="terms-grid">
         <div class="terms-block">
-          <div class="terms-value">訂金 50%：確認訂單時繳付<br/>尾款 50%：交件後3日內繳付</div>
+          <div class="terms-value">
+            訂金 50%：確認訂單時繳付<br/>
+            尾款 50%：交件後 3 日內繳付
+          </div>
         </div>
         <div class="terms-block">
-          <div class="terms-value">本報價單有效期限為 14 天<br/>超期需重新報價確認</div>
+          <div class="terms-value">
+            本報價單有效期限為 14 天<br/>
+            超期需重新報價確認
+          </div>
+        </div>
+        <div class="terms-block">
+          <div class="terms-value" style="border-left-color:var(--red);font-size:11px">
+            ⚠️ 本報價單客戶僅能於簽名欄簽名確認，<strong>不得自行修改</strong>產品內容或金額。如有疑問請聯絡業務窗口。
+          </div>
+        </div>
+        <div class="terms-block">
+          <div class="terms-value" style="font-size:11px">
+            客服 Email｜info@karbonxgaiaentertainment.com<br/>
+            官網｜<a href="https://karbonxgaiaentertainment.com/kayon-studio.html" target="_blank" style="color:var(--gold);text-decoration:none">karbonxgaiaentertainment.com</a>
+          </div>
         </div>
       </div>
     </div>
@@ -657,6 +748,22 @@
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbytDkvfXSFIhOxOQKx8LAOtdu3MJKGWUPw3T9xu_jAQNbrVE6EcKEsqINOkw_AIU7wQ/exec';
 
 const TAX_RATE = 0.05;
+const CARD_RATE = 0.028;
+let taxMode = 'inc'; // 'inc' = 含稅, 'exc' = 未含稅
+
+function setTaxMode(mode) {
+  taxMode = mode;
+  document.getElementById('tax-btn-inc').classList.toggle('active', mode === 'inc');
+  document.getElementById('tax-btn-exc').classList.toggle('active', mode === 'exc');
+  recalcTotals();
+}
+
+function onPayMethod() {
+  const method = document.querySelector('input[name="pay-method"]:checked').value;
+  document.getElementById('pay-transfer-info').style.display = method === 'transfer' ? 'flex' : 'none';
+  document.getElementById('pay-card-info').style.display     = method === 'card'     ? 'flex' : 'none';
+  recalcTotals();
+}
 
 // ── Product Database ───────────────────────────────────────────
 // note = 交件備註（顯示於報價單，具法律保護意義）
@@ -821,13 +928,31 @@ function recalcTotals() {
     document.getElementById('discount-row').style.display = 'none';
   }
 
-  const taxBase = subtotal - discount;
-  const tax     = Math.round(taxBase * TAX_RATE);
-  const total   = taxBase + tax;
+  const base = subtotal - discount;
+  let tax = 0;
+  let total = 0;
+
+  if (taxMode === 'inc') {
+    // 含稅：total = base + tax
+    tax   = Math.round(base * TAX_RATE);
+    total = base + tax;
+  } else {
+    // 未含稅：不加稅
+    tax   = 0;
+    total = base;
+  }
 
   document.getElementById('t-subtotal').textContent = 'NT$ ' + subtotal.toLocaleString();
-  document.getElementById('t-tax').textContent      = 'NT$ ' + tax.toLocaleString();
+  document.getElementById('t-tax').textContent      = taxMode === 'inc' ? 'NT$ ' + tax.toLocaleString() : '— 未含稅';
   document.getElementById('t-total').textContent    = 'NT$ ' + total.toLocaleString();
+
+  // 刷卡加收
+  const method = document.querySelector('input[name="pay-method"]:checked')?.value;
+  const cardEl = document.getElementById('t-card-total');
+  if (cardEl) {
+    const cardTotal = Math.round(total * (1 + CARD_RATE));
+    cardEl.textContent = 'NT$ ' + cardTotal.toLocaleString();
+  }
 }
 
 // ── Seal Upload ───────────────────────────────────────────────
@@ -977,6 +1102,8 @@ function submitQuotation() {
     items:         items,
     sigSales:      getSigData('sales'),
     sigOwner:      getSigData('owner'),
+    payMethod:     document.querySelector('input[name="pay-method"]:checked')?.value || 'transfer',
+    taxMode:       taxMode,
     signature:     getSigData('client'),
     companySeal:   document.getElementById('seal-large-b64').value,
     companyStamp:  document.getElementById('seal-small-b64').value,
