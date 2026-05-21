@@ -4,437 +4,717 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KXG ORBIT AI</title>
-
-  <!-- Google Sign-In -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
+    :root {
+      --bg:      #0a0a0f;
+      --surface: #111118;
+      --border:  #1e1e2a;
+      --text:    #e0e0e0;
+      --muted:   #555;
+      --accent:  #fff;
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #0a0a0f;
-      color: #e0e0e0;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
-    /* ── LOGIN SCREEN ── */
+    /* ── LOGIN ── */
     #login-screen {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 32px;
-      padding: 48px 32px;
-    }
-
-    .orbit-logo {
-      font-size: 13px;
-      letter-spacing: 6px;
-      text-transform: uppercase;
-      color: #888;
-    }
-
-    .orbit-title {
-      font-size: 36px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      background: linear-gradient(135deg, #fff 0%, #888 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .orbit-subtitle {
-      font-size: 13px;
-      color: #555;
-      letter-spacing: 1px;
-    }
-
-    .login-card {
-      background: #111118;
-      border: 1px solid #222;
-      border-radius: 16px;
-      padding: 40px 48px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 24px;
-      min-width: 320px;
-    }
-
-    .login-card p {
-      font-size: 13px;
-      color: #666;
-      text-align: center;
-      line-height: 1.6;
-    }
-
-    /* Google Sign-In button container */
-    #g_id_signin {
-      display: flex;
       justify-content: center;
+      min-height: 100vh;
+      gap: 28px;
+      padding: 32px;
     }
-
-    .login-error {
-      font-size: 12px;
-      color: #ff6b6b;
-      text-align: center;
-      display: none;
-    }
+    .orbit-brand  { font-size: 11px; letter-spacing: 6px; color: #444; text-transform: uppercase; }
+    .orbit-title  { font-size: 40px; font-weight: 700; letter-spacing: 3px;
+                    background: linear-gradient(135deg,#fff,#555);
+                    -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .orbit-sub    { font-size: 11px; letter-spacing: 3px; color: #333; text-transform: uppercase; }
+    .login-card   { background: var(--surface); border: 1px solid var(--border);
+                    border-radius: 16px; padding: 40px 48px;
+                    display: flex; flex-direction: column; align-items: center; gap: 20px; min-width: 300px; }
+    .login-card p { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.7; }
+    .login-error  { font-size: 12px; color: #ff6b6b; display: none; text-align: center; }
 
     /* ── LOADING ── */
     #loading-screen {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
+      display: none; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 100vh; gap: 20px;
     }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid #222;
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
+    .spinner { width: 36px; height: 36px; border: 2px solid #222;
+               border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .loading-text {
-      font-size: 13px;
-      color: #555;
-      letter-spacing: 2px;
-    }
-
-    /* ── DASHBOARD ── */
-    #dashboard-screen {
-      display: none;
-      flex-direction: column;
-      width: 100%;
-      max-width: 960px;
-      padding: 32px 24px;
-      gap: 24px;
-    }
-
-    .dashboard-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid #1a1a1a;
-      padding-bottom: 20px;
-    }
-
-    .dashboard-header-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 2px solid #333;
-    }
-
-    .user-info h2 {
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .user-info p {
-      font-size: 12px;
-      color: #555;
-      margin-top: 2px;
-    }
-
-    .badge {
-      font-size: 11px;
-      padding: 3px 10px;
-      border-radius: 20px;
-      background: #1a1a2e;
-      border: 1px solid #333;
-      color: #888;
-      letter-spacing: 1px;
-    }
-
-    .btn-logout {
-      font-size: 12px;
-      padding: 8px 16px;
-      border-radius: 8px;
-      border: 1px solid #333;
-      background: transparent;
-      color: #666;
-      cursor: pointer;
-      letter-spacing: 1px;
-      transition: all 0.2s;
-    }
-
-    .btn-logout:hover {
-      border-color: #555;
-      color: #aaa;
-    }
-
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-    }
-
-    .stat-card {
-      background: #111118;
-      border: 1px solid #1a1a1a;
-      border-radius: 12px;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .stat-card .label {
-      font-size: 11px;
-      color: #555;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-
-    .stat-card .value {
-      font-size: 28px;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .stat-card .sub {
-      font-size: 12px;
-      color: #444;
-    }
-
-    .coming-soon {
-      text-align: center;
-      padding: 48px;
-      color: #333;
-      font-size: 13px;
-      letter-spacing: 2px;
-    }
+    .loading-text { font-size: 11px; letter-spacing: 3px; color: #444; }
 
     /* ── UNAUTHORIZED ── */
     #unauthorized-screen {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-      padding: 48px 32px;
-      text-align: center;
+      display: none; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 100vh; gap: 16px; text-align: center; padding: 32px;
     }
+    #unauthorized-screen h2 { font-size: 18px; color: #ff6b6b; }
+    #unauthorized-screen p  { font-size: 13px; color: var(--muted); max-width: 300px; line-height: 1.6; }
 
-    #unauthorized-screen h2 {
-      font-size: 20px;
-      color: #ff6b6b;
-    }
+    /* ── MAIN LAYOUT ── */
+    #app-screen { display: none; flex-direction: row; min-height: 100vh; }
 
-    #unauthorized-screen p {
-      font-size: 13px;
-      color: #555;
-      max-width: 320px;
-      line-height: 1.6;
+    /* Sidebar */
+    .sidebar {
+      width: 220px; min-height: 100vh; background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      padding: 24px 0; flex-shrink: 0;
     }
+    .sidebar-brand { padding: 0 20px 24px; border-bottom: 1px solid var(--border); }
+    .sidebar-brand .brand-name  { font-size: 13px; font-weight: 700; letter-spacing: 2px; }
+    .sidebar-brand .brand-sub   { font-size: 10px; color: #444; letter-spacing: 1px; margin-top: 4px; }
+    .sidebar-nav  { flex: 1; padding: 16px 0; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px; font-size: 13px; color: var(--muted);
+      cursor: pointer; transition: all .15s; border-left: 2px solid transparent;
+      user-select: none;
+    }
+    .nav-item:hover    { color: var(--text); background: rgba(255,255,255,.03); }
+    .nav-item.active   { color: var(--accent); border-left-color: var(--accent);
+                         background: rgba(255,255,255,.05); }
+    .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+    .user-mini { display: flex; align-items: center; gap: 10px; }
+    .user-mini img   { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #333; }
+    .user-mini-info  { flex: 1; overflow: hidden; }
+    .user-mini-name  { font-size: 12px; font-weight: 600; white-space: nowrap;
+                       overflow: hidden; text-overflow: ellipsis; }
+    .user-mini-role  { font-size: 10px; color: #555; letter-spacing: 1px; }
+    .btn-logout-mini { font-size: 11px; color: #444; cursor: pointer; padding: 4px;
+                       transition: color .15s; }
+    .btn-logout-mini:hover { color: #888; }
 
-    .btn-retry {
-      font-size: 13px;
-      padding: 10px 24px;
-      border-radius: 8px;
-      border: 1px solid #333;
-      background: transparent;
-      color: #888;
-      cursor: pointer;
-      letter-spacing: 1px;
+    /* Content */
+    .content { flex: 1; padding: 32px; overflow-y: auto; }
+    .page { display: none; flex-direction: column; gap: 24px; }
+    .page.active { display: flex; }
+    .page-title { font-size: 20px; font-weight: 700; letter-spacing: 1px; }
+    .page-sub   { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 16px; }
+    .stat-card  { background: var(--surface); border: 1px solid var(--border);
+                  border-radius: 12px; padding: 24px; }
+    .stat-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+    .stat-value { font-size: 32px; font-weight: 700; margin: 8px 0 4px; }
+    .stat-sub   { font-size: 11px; color: #333; }
+
+    /* Table */
+    .table-wrap  { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .table-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
     }
+    .table-title { font-size: 13px; font-weight: 600; letter-spacing: 1px; }
+    table        { width: 100%; border-collapse: collapse; }
+    th           { font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase;
+                   padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+    td           { font-size: 13px; padding: 12px 16px; border-bottom: 1px solid #0f0f18;
+                   color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td  { background: rgba(255,255,255,.02); }
+    .empty-row td { color: #333; text-align: center; font-size: 12px; letter-spacing: 1px; padding: 32px; }
+
+    /* Badges */
+    .badge { font-size: 10px; padding: 3px 8px; border-radius: 20px; letter-spacing: 1px; display: inline-block; }
+    .badge-blue   { background: #0d1b2a; color: #4a9eff; border: 1px solid #1a3a5c; }
+    .badge-green  { background: #0d1a0d; color: #4aff7a; border: 1px solid #1a3a1a; }
+    .badge-yellow { background: #1a1a0d; color: #ffd34a; border: 1px solid #3a3a1a; }
+    .badge-red    { background: #1a0d0d; color: #ff6b6b; border: 1px solid #3a1a1a; }
+    .badge-gray   { background: #111; color: #555; border: 1px solid #222; }
+
+    /* Buttons */
+    .btn {
+      font-size: 12px; padding: 8px 16px; border-radius: 8px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--muted); cursor: pointer; letter-spacing: 1px; transition: all .15s;
+    }
+    .btn:hover       { border-color: #444; color: var(--text); }
+    .btn-primary     { background: #fff; color: #000; border-color: #fff; }
+    .btn-primary:hover { background: #ddd; border-color: #ddd; }
+    .btn-sm          { font-size: 11px; padding: 5px 10px; }
+
+    /* Search */
+    .search-row { display: flex; gap: 12px; align-items: center; }
+    .search-input {
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 14px; color: var(--text); font-size: 13px;
+      outline: none; transition: border .15s;
+    }
+    .search-input:focus { border-color: #444; }
+    .search-input::placeholder { color: #333; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.8); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 32px; min-width: 400px; max-width: 560px; width: 100%;
+      max-height: 80vh; overflow-y: auto;
+    }
+    .modal h3    { font-size: 16px; font-weight: 700; margin-bottom: 24px; letter-spacing: 1px; }
+    .form-group  { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .form-label  { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+    .form-input  {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px; color: var(--text);
+      font-size: 13px; outline: none; transition: border .15s;
+    }
+    .form-input:focus { border-color: #444; }
+    .form-row    { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-footer { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+    /* Revenue */
+    .revenue-value { font-size: 13px; color: #4aff7a; }
   </style>
 </head>
 <body>
 
-<!-- ── LOGIN ── -->
+<!-- LOGIN -->
 <div id="login-screen">
-  <div class="orbit-logo">KARBØN × GAIA ENTERTAINMENT</div>
+  <div class="orbit-brand">KARBØN × GAIA ENTERTAINMENT</div>
   <div class="orbit-title">ORBIT AI</div>
-  <div class="orbit-subtitle">ENTERPRISE RESOURCE PLANNING</div>
-
+  <div class="orbit-sub">Enterprise Resource Planning</div>
   <div class="login-card">
-    <p>使用你的 Google 帳號登入<br />僅限授權員工存取</p>
-
-    <!-- Google One Tap + Sign-In Button -->
+    <p>使用 Google 帳號登入<br/>僅限授權員工存取</p>
     <div id="g_id_onload"
          data-client_id="873821947706-a1p7cndein4utc7tt9tdcsvitqtnphts.apps.googleusercontent.com"
          data-callback="handleGoogleCredential"
-         data-auto_prompt="false">
-    </div>
+         data-auto_prompt="false"></div>
     <div class="g_id_signin"
-         data-type="standard"
-         data-size="large"
-         data-theme="filled_black"
-         data-text="sign_in_with"
-         data-shape="rectangular"
-         data-logo_alignment="left">
-    </div>
-
+         data-type="standard" data-size="large"
+         data-theme="filled_black" data-text="sign_in_with"
+         data-shape="rectangular" data-logo_alignment="left"></div>
     <div class="login-error" id="login-error"></div>
   </div>
 </div>
 
-<!-- ── LOADING ── -->
+<!-- LOADING -->
 <div id="loading-screen">
   <div class="spinner"></div>
   <div class="loading-text">VERIFYING</div>
 </div>
 
-<!-- ── UNAUTHORIZED ── -->
+<!-- UNAUTHORIZED -->
 <div id="unauthorized-screen">
   <h2>存取被拒絕</h2>
-  <p id="unauthorized-msg">此 Google 帳號尚未登錄為員工，請聯絡管理員。</p>
-  <button class="btn-retry" onclick="showLogin()">重新登入</button>
+  <p id="unauthorized-msg">此帳號尚未登錄為員工</p>
+  <button class="btn" onclick="showLogin()">重新登入</button>
 </div>
 
-<!-- ── DASHBOARD ── -->
-<div id="dashboard-screen">
-  <div class="dashboard-header">
-    <div class="dashboard-header-left">
-      <img class="user-avatar" id="user-avatar" src="" alt="avatar" />
-      <div class="user-info">
-        <h2 id="user-name">—</h2>
-        <p id="user-email">—</p>
+<!-- APP -->
+<div id="app-screen">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-name">ORBIT AI</div>
+      <div class="brand-sub">KXG ERP</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="switchPage('dashboard')">
+        <span class="nav-icon">◈</span> 儀表板
       </div>
-      <span class="badge" id="user-role">—</span>
-    </div>
-    <button class="btn-logout" onclick="handleLogout()">登出</button>
-  </div>
-
-  <div class="dashboard-grid">
-    <div class="stat-card">
-      <div class="label">進行中案件</div>
-      <div class="value" id="stat-cases">—</div>
-      <div class="sub">Cases in progress</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">待簽合約</div>
-      <div class="value" id="stat-contracts">—</div>
-      <div class="sub">Pending signatures</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">本月報價</div>
-      <div class="value" id="stat-quotes">—</div>
-      <div class="sub">Quotations this month</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">客戶數</div>
-      <div class="value" id="stat-customers">—</div>
-      <div class="sub">Total customers</div>
+      <div class="nav-item" onclick="switchPage('customers')">
+        <span class="nav-icon">◎</span> 客戶管理
+      </div>
+      <div class="nav-item" onclick="switchPage('cases')">
+        <span class="nav-icon">◉</span> 案件管理
+      </div>
+      <div class="nav-item" onclick="switchPage('quotations')">
+        <span class="nav-icon">◇</span> 報價系統
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-mini">
+        <img id="sidebar-avatar" src="" alt="" />
+        <div class="user-mini-info">
+          <div class="user-mini-name" id="sidebar-name">—</div>
+          <div class="user-mini-role" id="sidebar-role">—</div>
+        </div>
+        <div class="btn-logout-mini" onclick="handleLogout()">⏻</div>
+      </div>
     </div>
   </div>
 
-  <div class="coming-soon">CRM · CASES · QUOTATIONS · HR — COMING IN PHASE 2</div>
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <div>
+        <div class="page-title">儀表板</div>
+        <div class="page-sub">KXG ORBIT AI · ERP Overview</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">進行中案件</div>
+          <div class="stat-value" id="stat-cases">—</div>
+          <div class="stat-sub">Cases in progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">待簽合約</div>
+          <div class="stat-value" id="stat-contracts">—</div>
+          <div class="stat-sub">Pending signatures</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">本月營收</div>
+          <div class="stat-value revenue-value" id="stat-revenue">—</div>
+          <div class="stat-sub">Month revenue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">客戶總數</div>
+          <div class="stat-value" id="stat-customers">—</div>
+          <div class="stat-sub">Total customers</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customers -->
+    <div class="page" id="page-customers">
+      <div>
+        <div class="page-title">客戶管理</div>
+        <div class="page-sub">03_客戶資料庫</div>
+      </div>
+      <div class="search-row">
+        <input class="search-input" id="customer-search" placeholder="搜尋客戶名稱、電話、Email…" oninput="searchCustomers()" />
+        <button class="btn btn-primary" onclick="openCustomerModal()">＋ 新增客戶</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>客戶編號</th>
+              <th>客戶名稱</th>
+              <th>聯絡人</th>
+              <th>電話</th>
+              <th>Email</th>
+              <th>累積消費</th>
+              <th>最後合作</th>
+            </tr>
+          </thead>
+          <tbody id="customer-tbody">
+            <tr class="empty-row"><td colspan="7">載入中…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Cases -->
+    <div class="page" id="page-cases">
+      <div>
+        <div class="page-title">案件管理</div>
+        <div class="page-sub">04_案件紀錄表</div>
+      </div>
+      <div class="search-row">
+        <select class="search-input" id="case-status-filter" onchange="loadCases()" style="max-width:200px">
+          <option value="">全部狀態</option>
+          <option value="已報價">已報價</option>
+          <option value="進行中">進行中</option>
+          <option value="待簽約">待簽約</option>
+          <option value="已完成">已完成</option>
+          <option value="已取消">已取消</option>
+        </select>
+        <button class="btn btn-primary" onclick="openCaseModal()">＋ 新增案件</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>報價單號</th>
+              <th>客戶</th>
+              <th>專案名稱</th>
+              <th>確認日期</th>
+              <th>營收</th>
+              <th>狀態</th>
+              <th>負責人</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="case-tbody">
+            <tr class="empty-row"><td colspan="8">載入中…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quotations -->
+    <div class="page" id="page-quotations">
+      <div>
+        <div class="page-title">報價系統</div>
+        <div class="page-sub">Phase 2 · Coming Soon</div>
+      </div>
+      <div class="table-wrap" style="padding:64px;text-align:center;color:#333;font-size:12px;letter-spacing:2px;">
+        QUOTATION MODULE — COMING SOON
+      </div>
+    </div>
+
+  </div>
 </div>
 
+<!-- Customer Modal -->
+<div class="modal-overlay" id="customer-modal">
+  <div class="modal">
+    <h3>新增客戶</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <div class="form-label">客戶名稱 *</div>
+        <input class="form-input" id="c-name" placeholder="客戶名稱" />
+      </div>
+      <div class="form-group">
+        <div class="form-label">聯絡人</div>
+        <input class="form-input" id="c-contact" placeholder="聯絡人姓名" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <div class="form-label">電話</div>
+        <input class="form-input" id="c-phone" placeholder="0912-345-678" />
+      </div>
+      <div class="form-group">
+        <div class="form-label">Email</div>
+        <input class="form-input" id="c-email" placeholder="email@example.com" />
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="form-label">統編 / 公司名</div>
+      <input class="form-input" id="c-taxid" placeholder="統一編號或公司全名" />
+    </div>
+    <div class="form-group">
+      <div class="form-label">地址</div>
+      <input class="form-input" id="c-address" placeholder="地址" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('customer-modal')">取消</button>
+      <button class="btn btn-primary" onclick="submitCustomer()">建立客戶</button>
+    </div>
+  </div>
+</div>
+
+<!-- Case Modal -->
+<div class="modal-overlay" id="case-modal">
+  <div class="modal">
+    <h3>新增案件</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <div class="form-label">報價單號 *</div>
+        <input class="form-input" id="case-quoteno" placeholder="KGE-202605-001" />
+      </div>
+      <div class="form-group">
+        <div class="form-label">客戶名稱 *</div>
+        <input class="form-input" id="case-customer" placeholder="客戶名稱" />
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="form-label">專案名稱 *</div>
+      <input class="form-input" id="case-project" placeholder="專案名稱" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <div class="form-label">案件營收 (NT$)</div>
+        <input class="form-input" id="case-revenue" type="number" placeholder="0" />
+      </div>
+      <div class="form-group">
+        <div class="form-label">案件總成本 (NT$)</div>
+        <input class="form-input" id="case-cost" type="number" placeholder="0" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <div class="form-label">交期天數</div>
+        <input class="form-input" id="case-days" type="number" placeholder="7" />
+      </div>
+      <div class="form-group">
+        <div class="form-label">負責人</div>
+        <input class="form-input" id="case-owner" placeholder="KAYON" />
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="form-label">交期說明</div>
+      <input class="form-input" id="case-daysnote" placeholder="訂金確認後N個工作天完成" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('case-modal')">取消</button>
+      <button class="btn btn-primary" onclick="submitCase()">建立案件</button>
+    </div>
+  </div>
+</div>
 
 <script>
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbytDkvfXSFIhOxOQKx8LAOtdu3MJKGWUPw3T9xu_jAQNbrVE6EcKEsqINOkw_AIU7wQ/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbytDkvfXSFIhOxOQKx8LAOtdu3MJKGWUPw3T9xu_jAQNbrVE6EcKEsqINOkw_AIU7wQ/exec';
 
-  let currentUser = null;
+let currentUser = null;
 
-  // ── Google Credential Callback ──
-  function handleGoogleCredential(response) {
-    const idToken = response.credential;
-    showLoading();
-
-    fetch(GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'google_login',
-        idToken: idToken,
-      }),
-    })
-    .then(res => res.json())
+// ── Auth ──────────────────────────────────────────────────────
+function handleGoogleCredential(response) {
+  showLoading();
+  callGAS({ action: 'google_login', idToken: response.credential })
     .then(data => {
       if (data.status === 'authorized') {
         currentUser = data;
-        showDashboard(data);
+        showApp(data);
+        loadDashboardStats();
       } else if (data.status === 'unauthorized') {
         showUnauthorized(data.message);
       } else {
-        showError(data.message || '登入失敗，請再試一次。');
+        showError(data.message || '登入失敗');
       }
-    })
-    .catch(err => {
-      showError('網路錯誤，請稍後再試。');
-      console.error(err);
-    });
+    }).catch(() => showError('網路錯誤，請稍後再試'));
+}
+
+function handleLogout() {
+  currentUser = null;
+  google.accounts.id.disableAutoSelect();
+  showLogin();
+}
+
+// ── Screens ───────────────────────────────────────────────────
+function showLogin() {
+  hide('loading-screen'); hide('app-screen'); hide('unauthorized-screen');
+  show('login-screen', 'flex');
+  document.getElementById('login-error').style.display = 'none';
+}
+function showLoading() {
+  hide('login-screen'); hide('app-screen'); hide('unauthorized-screen');
+  show('loading-screen', 'flex');
+}
+function showApp(user) {
+  hide('loading-screen'); hide('login-screen'); hide('unauthorized-screen');
+  document.getElementById('sidebar-name').textContent = user.name || user.email;
+  document.getElementById('sidebar-role').textContent = user.role || 'STAFF';
+  if (user.picture) document.getElementById('sidebar-avatar').src = user.picture;
+  show('app-screen', 'flex');
+}
+function showUnauthorized(msg) {
+  hide('loading-screen'); hide('login-screen'); hide('app-screen');
+  if (msg) document.getElementById('unauthorized-msg').textContent = msg;
+  show('unauthorized-screen', 'flex');
+}
+function showError(msg) {
+  hide('loading-screen');
+  show('login-screen', 'flex');
+  const el = document.getElementById('login-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+// ── Navigation ────────────────────────────────────────────────
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  event.currentTarget.classList.add('active');
+
+  if (page === 'customers') loadCustomers();
+  if (page === 'cases')     loadCases();
+}
+
+// ── Dashboard ─────────────────────────────────────────────────
+function loadDashboardStats() {
+  callGAS({ action: 'get_stats' }).then(data => {
+    if (data.status !== 'ok') return;
+    document.getElementById('stat-cases').textContent     = data.inProgress;
+    document.getElementById('stat-contracts').textContent = data.pendingSign;
+    document.getElementById('stat-revenue').textContent   = 'NT$ ' + Number(data.monthRevenue).toLocaleString();
+    document.getElementById('stat-customers').textContent = data.totalCustomers;
+  });
+}
+
+// ── Customers ─────────────────────────────────────────────────
+let allCustomers = [];
+
+function loadCustomers() {
+  document.getElementById('customer-tbody').innerHTML =
+    '<tr class="empty-row"><td colspan="7">載入中…</td></tr>';
+  callGAS({ action: 'get_customers', keyword: '' }).then(data => {
+    allCustomers = data.data || [];
+    renderCustomers(allCustomers);
+  });
+}
+
+function searchCustomers() {
+  const kw = document.getElementById('customer-search').value.toLowerCase();
+  const filtered = allCustomers.filter(c =>
+    c.name.toLowerCase().includes(kw) ||
+    c.phone.includes(kw) ||
+    c.email.toLowerCase().includes(kw) ||
+    c.customerNo.toLowerCase().includes(kw)
+  );
+  renderCustomers(filtered);
+}
+
+function renderCustomers(list) {
+  const tbody = document.getElementById('customer-tbody');
+  if (!list.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">NO CUSTOMERS FOUND</td></tr>';
+    return;
   }
+  tbody.innerHTML = list.map(c => `
+    <tr>
+      <td><span class="badge badge-gray">${c.customerNo}</span></td>
+      <td>${c.name}</td>
+      <td>${c.contact || '—'}</td>
+      <td>${c.phone || '—'}</td>
+      <td>${c.email || '—'}</td>
+      <td>NT$ ${Number(c.totalSpent).toLocaleString()}</td>
+      <td>${c.lastDate || '—'}</td>
+    </tr>
+  `).join('');
+}
 
-  // ── Screen Controls ──
-  function showLogin() {
-    hide('loading-screen');
-    hide('dashboard-screen');
-    hide('unauthorized-screen');
-    show('login-screen');
-    document.getElementById('login-error').style.display = 'none';
-  }
+function openCustomerModal() {
+  ['c-name','c-contact','c-phone','c-email','c-taxid','c-address']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('customer-modal').classList.add('open');
+}
 
-  function showLoading() {
-    hide('login-screen');
-    hide('dashboard-screen');
-    hide('unauthorized-screen');
-    show('loading-screen');
-  }
-
-  function showDashboard(user) {
-    hide('loading-screen');
-    hide('login-screen');
-    hide('unauthorized-screen');
-
-    document.getElementById('user-name').textContent  = user.name  || user.email;
-    document.getElementById('user-email').textContent = user.email;
-    document.getElementById('user-role').textContent  = user.role  || 'STAFF';
-    if (user.picture) {
-      document.getElementById('user-avatar').src = user.picture;
+function submitCustomer() {
+  const name = document.getElementById('c-name').value.trim();
+  if (!name) { alert('請填寫客戶名稱'); return; }
+  callGAS({
+    action: 'create_customer',
+    name,
+    contact: document.getElementById('c-contact').value,
+    phone:   document.getElementById('c-phone').value,
+    email:   document.getElementById('c-email').value,
+    taxId:   document.getElementById('c-taxid').value,
+    address: document.getElementById('c-address').value,
+  }).then(data => {
+    if (data.status === 'ok') {
+      closeModal('customer-modal');
+      loadCustomers();
+      loadDashboardStats();
+    } else {
+      alert('錯誤：' + data.message);
     }
+  });
+}
 
-    // Stats placeholder
-    document.getElementById('stat-cases').textContent     = '0';
-    document.getElementById('stat-contracts').textContent = '0';
-    document.getElementById('stat-quotes').textContent    = '0';
-    document.getElementById('stat-customers').textContent = '0';
+// ── Cases ─────────────────────────────────────────────────────
+function loadCases() {
+  document.getElementById('case-tbody').innerHTML =
+    '<tr class="empty-row"><td colspan="8">載入中…</td></tr>';
+  const status = document.getElementById('case-status-filter').value;
+  callGAS({ action: 'get_cases', status }).then(data => {
+    renderCases(data.data || []);
+  });
+}
 
-    show('dashboard-screen');
+function renderCases(list) {
+  const tbody = document.getElementById('case-tbody');
+  if (!list.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">NO CASES FOUND</td></tr>';
+    return;
   }
+  tbody.innerHTML = list.map(c => `
+    <tr>
+      <td><span class="badge badge-gray">${c.quoteNo}</span></td>
+      <td>${c.customerName}</td>
+      <td>${c.projectName}</td>
+      <td>${c.confirmDate}</td>
+      <td>NT$ ${Number(c.revenue).toLocaleString()}</td>
+      <td>${statusBadge(c.status)}</td>
+      <td>${c.owner || '—'}</td>
+      <td>
+        <select class="btn btn-sm" onchange="updateStatus('${c.quoteNo}', this.value)">
+          <option value="">更新狀態</option>
+          <option>已報價</option>
+          <option>進行中</option>
+          <option>待簽約</option>
+          <option>已完成</option>
+          <option>已取消</option>
+        </select>
+      </td>
+    </tr>
+  `).join('');
+}
 
-  function showUnauthorized(msg) {
-    hide('loading-screen');
-    hide('login-screen');
-    hide('dashboard-screen');
-    if (msg) document.getElementById('unauthorized-msg').textContent = msg;
-    show('unauthorized-screen');
-  }
+function statusBadge(status) {
+  const map = {
+    '已報價': 'badge-blue', '進行中': 'badge-yellow',
+    '待簽約': 'badge-yellow', '已完成': 'badge-green', '已取消': 'badge-red'
+  };
+  return `<span class="badge ${map[status] || 'badge-gray'}">${status || '—'}</span>`;
+}
 
-  function showError(msg) {
-    hide('loading-screen');
-    show('login-screen');
-    const el = document.getElementById('login-error');
-    el.textContent = msg;
-    el.style.display = 'block';
-  }
+function updateStatus(quoteNo, newStatus) {
+  if (!newStatus) return;
+  callGAS({ action: 'update_case_status', quoteNo, newStatus }).then(data => {
+    if (data.status === 'ok') loadCases();
+    else alert('錯誤：' + data.message);
+  });
+}
 
-  function handleLogout() {
-    currentUser = null;
-    google.accounts.id.disableAutoSelect();
-    showLogin();
-  }
+function openCaseModal() {
+  ['case-quoteno','case-customer','case-project','case-revenue',
+   'case-cost','case-days','case-owner','case-daysnote']
+    .forEach(id => document.getElementById(id).value = '');
+  if (currentUser) document.getElementById('case-owner').value = currentUser.name || '';
+  document.getElementById('case-modal').classList.add('open');
+}
 
-  function show(id) { document.getElementById(id).style.display = 'flex'; }
-  function hide(id) { document.getElementById(id).style.display = 'none'; }
+function submitCase() {
+  const quoteNo = document.getElementById('case-quoteno').value.trim();
+  const customer = document.getElementById('case-customer').value.trim();
+  const project  = document.getElementById('case-project').value.trim();
+  if (!quoteNo || !customer || !project) { alert('請填寫報價單號、客戶名稱、專案名稱'); return; }
+
+  callGAS({
+    action:       'create_case',
+    quoteNo,
+    customerName: customer,
+    projectName:  project,
+    revenue:      Number(document.getElementById('case-revenue').value) || 0,
+    cost:         Number(document.getElementById('case-cost').value) || 0,
+    days:         Number(document.getElementById('case-days').value) || 0,
+    owner:        document.getElementById('case-owner').value,
+    daysNote:     document.getElementById('case-daysnote').value,
+  }).then(data => {
+    if (data.status === 'ok') {
+      closeModal('case-modal');
+      loadCases();
+      loadDashboardStats();
+    } else {
+      alert('錯誤：' + data.message);
+    }
+  });
+}
+
+// ── Modals ────────────────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+// ── GAS Call ──────────────────────────────────────────────────
+function callGAS(body) {
+  return fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(body),
+  }).then(r => r.json());
+}
+
+// ── Utils ─────────────────────────────────────────────────────
+function show(id, display) { document.getElementById(id).style.display = display || 'block'; }
+function hide(id)          { document.getElementById(id).style.display = 'none'; }
 </script>
-
 </body>
 </html>
