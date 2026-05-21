@@ -212,12 +212,22 @@
     .btn-delete:hover { color: var(--red); }
 
     /* col widths */
-    .col-product { width: 36%; }
-    .col-desc    { width: 26%; }
+    .col-product { width: 30%; }
+    .col-desc    { width: 30%; }
     .col-price   { width: 13%; }
     .col-qty     { width: 8%; }
     .col-sub     { width: 13%; }
     .col-del     { width: 4%; }
+
+    .item-note {
+      font-size: 10px; color: var(--muted); margin-top: 3px;
+      letter-spacing: 0.5px; line-height: 1.4;
+    }
+    .item-gift {
+      font-size: 10px; color: var(--gold); margin-top: 2px;
+      letter-spacing: 0.5px;
+    }
+    .item-desc-wrap { display: flex; flex-direction: column; gap: 2px; }
 
     .btn-add-item {
       margin-top: 16px;
@@ -477,7 +487,7 @@
       <thead>
         <tr>
           <th class="col-product">產品 / 服務</th>
-          <th class="col-desc">描述</th>
+          <th class="col-desc">描述 / 交件備註</th>
           <th class="col-price right">單價</th>
           <th class="col-qty">數量</th>
           <th class="col-sub right">小計</th>
@@ -547,26 +557,25 @@
   <!-- SEALS & SIGNATURE -->
   <div class="sign-section">
 
-    <!-- 公司大章 -->
+    <!-- 客戶簽名 -->
     <div class="sign-block">
-      <div class="sign-label">公司大章</div>
-      <div class="seal-upload">
-        <input type="file" accept="image/*" onchange="loadSeal(this,'seal-large-img','seal-large-b64')" />
-        <div class="seal-hint">上傳<br/>PNG/JPG</div>
-        <img id="seal-large-img" alt="大章" />
+      <div class="sign-label">客戶簽名</div>
+      <div class="sig-tabs">
+        <button class="sig-tab active" onclick="switchSigTab('client','draw')">手簽</button>
+        <button class="sig-tab" onclick="switchSigTab('client','upload')">上傳</button>
       </div>
-      <input type="hidden" id="seal-large-b64" />
-    </div>
-
-    <!-- 公司小章 -->
-    <div class="sign-block">
-      <div class="sign-label">公司小章</div>
-      <div class="seal-upload">
-        <input type="file" accept="image/*" onchange="loadSeal(this,'seal-small-img','seal-small-b64')" />
-        <div class="seal-hint">上傳<br/>PNG/JPG</div>
-        <img id="seal-small-img" alt="小章" />
+      <div id="client-draw-wrap" class="sig-wrap">
+        <canvas id="sig-client" class="sig-canvas"></canvas>
+        <button class="sig-clear" onclick="clearCanvas('sig-client','client')">清除</button>
       </div>
-      <input type="hidden" id="seal-small-b64" />
+      <div id="client-upload-wrap" class="sig-upload-area">
+        <input type="file" accept="image/*" onchange="loadSigUpload(this,'client-upload-img','sig-client-b64')" />
+        <img id="client-upload-img" />
+        <span class="sig-upload-hint">點擊上傳簽名圖</span>
+      </div>
+      <input type="hidden" id="sig-client-b64" />
+      <div class="sig-underline"></div>
+      <div class="sig-name" id="f-customer-display">客戶</div>
     </div>
 
     <!-- 業務簽名 -->
@@ -611,25 +620,26 @@
       <div class="sig-name" id="owner-name-display">負責人</div>
     </div>
 
-    <!-- 客戶簽名 -->
+    <!-- 公司小章 -->
     <div class="sign-block">
-      <div class="sign-label">客戶簽名</div>
-      <div class="sig-tabs">
-        <button class="sig-tab active" onclick="switchSigTab('client','draw')">手簽</button>
-        <button class="sig-tab" onclick="switchSigTab('client','upload')">上傳</button>
+      <div class="sign-label">公司小章</div>
+      <div class="seal-upload">
+        <input type="file" accept="image/*" onchange="loadSeal(this,'seal-small-img','seal-small-b64')" />
+        <div class="seal-hint">上傳<br/>PNG/JPG</div>
+        <img id="seal-small-img" alt="小章" />
       </div>
-      <div id="client-draw-wrap" class="sig-wrap">
-        <canvas id="sig-client" class="sig-canvas"></canvas>
-        <button class="sig-clear" onclick="clearCanvas('sig-client','client')">清除</button>
+      <input type="hidden" id="seal-small-b64" />
+    </div>
+
+    <!-- 公司大章 -->
+    <div class="sign-block">
+      <div class="sign-label">公司大章</div>
+      <div class="seal-upload">
+        <input type="file" accept="image/*" onchange="loadSeal(this,'seal-large-img','seal-large-b64')" />
+        <div class="seal-hint">上傳<br/>PNG/JPG</div>
+        <img id="seal-large-img" alt="大章" />
       </div>
-      <div id="client-upload-wrap" class="sig-upload-area">
-        <input type="file" accept="image/*" onchange="loadSigUpload(this,'client-upload-img','sig-client-b64')" />
-        <img id="client-upload-img" />
-        <span class="sig-upload-hint">點擊上傳簽名圖</span>
-      </div>
-      <input type="hidden" id="sig-client-b64" />
-      <div class="sig-underline"></div>
-      <div class="sig-name" id="f-customer-display">客戶</div>
+      <input type="hidden" id="seal-large-b64" />
     </div>
 
   </div>
@@ -649,21 +659,24 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbytDkvfXSFIhOxOQKx8LAOt
 const TAX_RATE = 0.05;
 
 // ── Product Database ───────────────────────────────────────────
+// note = 交件備註（顯示於報價單，具法律保護意義）
+// gift = 贈品（有值則顯示於品項下方）
+// customPrice = true 表示業務自填價格
 const PRODUCTS = [
-  { id:'P-001', category:'Music Production', name:'原創歌曲製作 (全套)',      desc:'含詞曲/編曲/母帶混音/錄音室2HR/贈NFC迷你專輯2個。預計21-30工作日交件。', price:17000 },
-  { id:'P-002', category:'Music Production', name:'原創歌曲製作 (純製作)',    desc:'含詞曲/編曲/母帶混音處理。預計14-21個工作日交件。',                     price:8000  },
-  { id:'P-003', category:'Music Production', name:'製作急件加收費用',         desc:'針對歌曲製作、錄音等服務之優先處理費用。',                              price:3000  },
-  { id:'P-004', category:'Music Production', name:'錄音室加時費',             desc:'錄音室租借與工程師支援，每小時計算。',                                  price:1000  },
-  { id:'P-005', category:'Visual Design',    name:'靜態 MV 製作',             desc:'搭配歌曲長度，客戶需提供照片，含基礎剪輯與特效。',                      price:6000  },
-  { id:'P-006', category:'Education',        name:'音樂創作課程 (4堂)',        desc:'零基礎圓夢一對一課程：詞曲創作＋數位編曲混音，手把手帶你完成第一首歌。', price:4000  },
-  { id:'P-007', category:'Education',        name:'音樂創作課程 (8+1堂)',      desc:'一次購買8堂送1堂優惠套票，共9堂。涵蓋完整製作流程。',                   price:8000  },
-  { id:'P-008', category:'Music Production', name:'Podcast 製作 (15min)',     desc:'Podcast 製作剪輯與優化',                                               price:900   },
-  { id:'P-009', category:'Music Production', name:'Podcast 製作 (20min)',     desc:'Podcast 製作剪輯與優化',                                               price:1000  },
-  { id:'P-010', category:'Music Production', name:'Podcast 製作 (25min)',     desc:'Podcast 製作剪輯與優化',                                               price:1200  },
-  { id:'P-011', category:'Music Production', name:'Podcast 方案A (每月4集)',   desc:'每集15分內，超出以10分鐘為一次，每次加收500元',                         price:3800  },
-  { id:'P-012', category:'Music Production', name:'Podcast 方案B (每月8集)',   desc:'每集15分內，超出以10分鐘為一次，每次加收500元',                         price:7500  },
-  { id:'P-013', category:'Product',          name:'NFC 迷你專輯 (加購)',       desc:'原創歌曲製作配套之加購產品。',                                          price:180   },
-  { id:'P-014', category:'附加項目及備註',    name:'',                         desc:'',                                                                     price:0     },
+  { id:'P-001', category:'Music Production', name:'原創歌曲製作 (全套)',    desc:'含詞曲/編曲/母帶混音/錄音室2HR。急件費另計。',          note:'預計21-30個工作日交件',       gift:'NFC迷你專輯2個', price:17000 },
+  { id:'P-002', category:'Music Production', name:'原創歌曲製作 (純製作)',  desc:'含詞曲/編曲/母帶混音處理。急件費另計。',                 note:'預計14-21個工作日交件',       gift:'NFC迷你專輯2個', price:8000  },
+  { id:'P-003', category:'Music Production', name:'製作急件加收費用',       desc:'針對歌曲製作、錄音等服務之優先處理費用。',               note:'',                            gift:'',               price:0, customPrice:true },
+  { id:'P-004', category:'Music Production', name:'錄音室加時費',           desc:'錄音室租借與工程師支援，每小時計算。',                   note:'',                            gift:'',               price:0, customPrice:true },
+  { id:'P-005', category:'Visual Design',    name:'靜態 MV 製作',           desc:'搭配歌曲長度，客戶需提供照片，含基礎剪輯與特效。急件費另計。', note:'預計21-30個工作日交件',   gift:'',               price:6000  },
+  { id:'P-006', category:'Education',        name:'音樂創作課程 (4堂)',      desc:'零基礎圓夢一對一課程：詞曲創作＋數位編曲混音，手把手帶你完成第一首歌。', note:'',           gift:'',               price:4000  },
+  { id:'P-007', category:'Education',        name:'音樂創作課程 (8+1堂)',    desc:'一次購買8堂送1堂優惠套票，共9堂。涵蓋完整製作流程。',   note:'',                            gift:'',               price:8000  },
+  { id:'P-008', category:'Music Production', name:'Podcast 製作 (15min)',   desc:'Podcast 製作剪輯與優化 (15分鐘內)。急件費另計。',        note:'預計1-1.5個工作日交件',       gift:'',               price:900   },
+  { id:'P-009', category:'Music Production', name:'Podcast 製作 (20min)',   desc:'Podcast 製作剪輯與優化 (20分鐘內)。急件費另計。',        note:'預計1.5-2個工作日交件',       gift:'',               price:1000  },
+  { id:'P-010', category:'Music Production', name:'Podcast 製作 (25min)',   desc:'Podcast 製作剪輯與優化 (25分鐘內)。急件費另計。',        note:'預計2-2.5個工作日交件',       gift:'',               price:1200  },
+  { id:'P-011', category:'Music Production', name:'Podcast 方案A (每月4集)', desc:'方案A：每月4集，每集15分內。超出以10分鐘為一次，每次加收500元。', note:'預計每集1個工作日交件', gift:'',               price:3800  },
+  { id:'P-012', category:'Music Production', name:'Podcast 方案B (每月8集)', desc:'方案B：每月8集，每集15分內。超出以10分鐘為一次，每次加收500元。', note:'預計每集1-1.5個工作日交件', gift:'',            price:7500  },
+  { id:'P-013', category:'Product',          name:'NFC 迷你專輯 (加購)',     desc:'原創歌曲製作配套之加購產品。',                           note:'隨交件日出貨',                gift:'',               price:180   },
+  { id:'P-014', category:'附加項目及備註',    name:'',                       desc:'',                                                       note:'',                            gift:'',               price:0, customPrice:true },
 ];
 
 let itemCount = 0;
@@ -700,7 +713,11 @@ function addItem() {
       </select>
     </td>
     <td class="col-desc">
-      <input type="text" id="item-desc-${id}" placeholder="描述" oninput="recalcTotals()" />
+      <div class="item-desc-wrap">
+        <input type="text" id="item-desc-${id}" placeholder="描述" oninput="recalcTotals()" />
+        <div class="item-note" id="item-note-${id}"></div>
+        <div class="item-gift" id="item-gift-${id}"></div>
+      </div>
     </td>
     <td class="col-price right">
       <input type="number" id="item-price-${id}" placeholder="0" min="0" oninput="recalcRow(${id})" style="text-align:right" />
@@ -721,14 +738,36 @@ function onProductSelect(id) {
   const prod  = PRODUCTS.find(p => p.id === pId);
   if (!prod) return;
 
-  const isCustom = pId === 'P-014';
-  const descEl  = document.getElementById('item-desc-' + id);
-  const priceEl = document.getElementById('item-price-' + id);
+  const isCustom = pId === 'P-014' || prod.customPrice;
+  const descEl   = document.getElementById('item-desc-'  + id);
+  const priceEl  = document.getElementById('item-price-' + id);
+  const noteEl   = document.getElementById('item-note-'  + id);
+  const giftEl   = document.getElementById('item-gift-'  + id);
 
-  descEl.value        = isCustom ? '' : prod.desc;
-  descEl.readOnly     = !isCustom;
-  priceEl.value       = isCustom ? '' : prod.price;
-  priceEl.readOnly    = !isCustom;
+  descEl.value    = (pId === 'P-014') ? '' : prod.desc;
+  descEl.readOnly = (pId !== 'P-014') && !prod.customPrice;
+  priceEl.value   = (prod.customPrice || pId === 'P-014') ? '' : prod.price;
+  priceEl.readOnly = false; // 價格永遠可調整
+
+  // 備註（交件天數 — 法律保護用）
+  if (noteEl) noteEl.textContent = prod.note ? '📋 ' + prod.note : '';
+
+  // 贈品
+  if (giftEl) giftEl.textContent = (prod.gift && prod.gift !== 'x' && prod.gift !== '') ? '🎁 贈：' + prod.gift : '';
+
+  // 自動帶入交期說明（如果交期說明欄是空的）
+  if (prod.note) {
+    const daysNoteEl = document.getElementById('f-days-note');
+    if (daysNoteEl && !daysNoteEl.value) {
+      daysNoteEl.value = prod.note;
+    }
+    // 自動帶入天數
+    const daysEl = document.getElementById('f-days');
+    if (daysEl && !daysEl.value && prod.note) {
+      const match = prod.note.match(/(\d+)/);
+      if (match) daysEl.value = match[1];
+    }
+  }
 
   recalcRow(id);
 }
