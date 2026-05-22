@@ -1,4 +1,4 @@
-const CACHE_NAME = 'orbit-v1';
+const CACHE_NAME = 'orbit-v2';
 const STATIC_ASSETS = [
   '/kayon-orbit/',
   '/kayon-orbit/index.html',
@@ -13,7 +13,7 @@ self.addEventListener('install', e => {
   self.skipWaiting();
 });
 
-self.addEventListener('fetch', () => {});
+self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
@@ -25,13 +25,20 @@ self.addEventListener('fetch', () => {});
 self.addEventListener('fetch', e => {
   const url = e.request.url;
 
+  // 這些請求直接走網路，不快取
   if (
     url.includes('script.google.com') ||
     url.includes('api.line.me') ||
     url.includes('fonts.googleapis.com') ||
-    url.includes('placeholder.com') ||
+    url.includes('accounts.google.com') ||
     e.request.method !== 'GET'
   ) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
+
+  // quotation.html 永遠走網路，確保客戶拿到最新版
+  if (url.includes('quotation.html')) {
     e.respondWith(fetch(e.request));
     return;
   }
