@@ -40,29 +40,79 @@
   </div>
 
   <script>
-    async function init() {
-      await liff.init({ liffId: "2010149593-DyntMxoX" });
-      if (!liff.isLoggedIn()) liff.login();
-    }
+// 轉圖片為 Base64 的輔助函式
+function fileToToBase64(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) resolve(null);
+    const reader = new FileReader();
+    reader.onload = () => resolve({ base64: reader.result, name: file.name });
+    reader.onerror = error => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
 
-    document.getElementById('form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const data = {
-        lineUserId: (await liff.getProfile()).userId,
-        fullName: document.getElementById('fullName').value,
-        englishName: document.getElementById('englishName').value,
-        birthday: document.getElementById('birthday').value,
-        phone: document.getElementById('phone').value,
-        department: document.getElementById('department').value,
-        timestamp: new Date().toISOString()
-      };
+async function init() {
+  await liff.init({ liffId: "2010149593-DyntMxoX" });
+  if (!liff.isLoggedIn()) liff.login();
+}
 
-      // TODO: 上傳圖片 + 送 GAS（下一步會提供）
-      alert('資料已送出！請等待 HR 審核。');
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  // 顯示儲存中狀態
+  const submitBtn = e.target.querySelector('button');
+  const originalText = submitBtn.innerText;
+  submitBtn.innerText = "🌌 系統處理中，請稍候...";
+  submitBtn.disabled = true;
+
+  try {
+    const profile = await liff.getProfile();
+    
+    // 轉化圖片檔案為 Base64 格式
+    const idCardFile = document.getElementById('idCard').files[0];
+    const bankBookFile = document.getElementById('bankBook').files[0];
+    
+    const idCardData = await fileToToBase64(idCardFile);
+    const bankBookData = await fileToToBase64(bankBookFile);
+
+    // 封裝成要送給 GAS 的完整 JSON 資料包
+    const payload = {
+      lineUserId: profile.userId,
+      name: document.getElementById('fullName').value,
+      englishName: document.getElementById('englishName').value,
+      birthday: document.getElementById('birthday').value,
+      phone: document.getElementById('phone').value,
+      department: document.getElementById('department').value,
+      idCardFront: idCardData, // 正反面先合用一個欄位上傳
+      bankBook: bankBookData
+    };
+
+    // 💡 這裡換成你的 GAS 網路應用程式部署網址 (下一步部署後取得)
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbz_XXXXXXXXX/exec"; 
+
+    const response = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
     });
+    
+    const result = await response.json();
+    
+    if (result.status === "success") {
+      alert(result.message);
+      liff.closeWindow(); // 成功後自動關閉 LIFF 視窗
+    } else {
+      alert("儲存失敗: " + result.message);
+    }
+  } catch (error) {
+    console.error(error);
+    alert("系統連線錯誤，請稍後再試！");
+  } finally {
+    submitBtn.innerText = originalText;
+    submitBtn.disabled = false;
+  }
+});
 
-    window.onload = init;
-  </script>
+window.onload = init;
+</script>
 </body>
 </html>
