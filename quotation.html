@@ -514,7 +514,8 @@
     /* ── 業務模式（預設）── 只顯示業務簽名，其他全隱藏 */
     body:not(.client-mode):not(.confirm-mode) .sign-block-client,
     body:not(.client-mode):not(.confirm-mode) .sign-block-owner,
-    body:not(.client-mode):not(.confirm-mode) .sign-block-seals { display:none !important; }
+    body:not(.client-mode):not(.confirm-mode) .sign-block-seals,
+    body:not(.client-mode):not(.confirm-mode) .sign-block-stamp-zone { display:none !important; }
 
     /* ── 客戶簽名模式 ── 業務簽名唯讀 + 客戶欄位開放，其他隱藏 */
     body.client-mode .sign-block-owner,
