@@ -1,1 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>入職程序 - KARBØN X GAIA ORBIT</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/line-liff/2.0.0/liff.min.js"></script>
+  <style>
+    body { margin:0; padding:0; background:#05050a; color:white; font-family:system-ui; }
+    .glass { background:rgba(10,10,20,0.85); backdrop-filter:blur(20px); border:1px solid rgba(103,232,249,0.3); border-radius:24px; padding:24px; margin:16px; }
+    input, select, button { width:100%; padding:14px; margin:8px 0; background:rgba(255,255,255,0.1); border:1px solid rgba(103,232,249,0.3); border-radius:12px; color:white; }
+    button { background:#67e8f9; color:#000; font-weight:bold; font-size:18px; }
+    .upload { border:2px dashed #67e8f9; padding:20px; text-align:center; border-radius:16px; margin:12px 0; }
+  </style>
+</head>
+<body>
+  <div class="glass">
+    <h1 style="text-align:center; color:#67e8f9;">🌌 入職程序</h1>
+    <p style="text-align:center; color:#aaa;">請完整填寫以下資料</p>
 
+    <form id="form">
+      <input type="text" id="fullName" placeholder="姓名" required>
+      <input type="text" id="englishName" placeholder="英文名" required>
+      <input type="date" id="birthday" placeholder="生日" required>
+      <input type="tel" id="phone" placeholder="手機號碼" required>
+      <input type="text" id="department" placeholder="部門 / 職稱" required>
+
+      <div class="upload">
+        <p>上傳身分證正反面</p>
+        <input type="file" id="idCard" accept="image/*" required>
+      </div>
+
+      <div class="upload">
+        <p>上傳存摺封面與內頁</p>
+        <input type="file" id="bankBook" accept="image/*" required>
+      </div>
+
+      <button type="submit">送出入職資料</button>
+    </form>
+  </div>
+
+  <script>
+    async function init() {
+      await liff.init({ liffId: "2010149593-DyntMxoX" });
+      if (!liff.isLoggedIn()) liff.login();
+    }
+
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const data = {
+        lineUserId: (await liff.getProfile()).userId,
+        fullName: document.getElementById('fullName').value,
+        englishName: document.getElementById('englishName').value,
+        birthday: document.getElementById('birthday').value,
+        phone: document.getElementById('phone').value,
+        department: document.getElementById('department').value,
+        timestamp: new Date().toISOString()
+      };
+
+      // TODO: 上傳圖片 + 送 GAS（下一步會提供）
+      alert('資料已送出！請等待 HR 審核。');
+    });
+
+    window.onload = init;
+  </script>
+</body>
+</html>
