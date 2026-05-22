@@ -307,12 +307,33 @@
     .sign-section {
       padding: 40px 56px;
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+      grid-template-columns: repeat(7, 1fr);
       gap: 16px;
-      align-items: end;
+      align-items: start;
       border-top: 1px solid var(--line);
     }
-    .sign-block { display: flex; flex-direction: column; gap: 10px; }
+    .sign-block { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+    /* 統一簽名／蓋章高度 */
+    .sig-wrap,
+    .sig-upload-area { height: 90px !important; min-height: 90px; }
+    .sig-canvas      { height: 90px !important; display: block; width: 100%; }
+    .seal-upload     { width: 100%; height: 90px; min-height: 90px; }
+
+    @media (max-width: 900px) {
+      .sign-section {
+        grid-template-columns: repeat(4, 1fr);
+        padding: 24px;
+        gap: 12px;
+      }
+    }
+    @media (max-width: 600px) {
+      .sign-section {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 16px;
+        gap: 10px;
+      }
+    }
     .sign-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
 
     /* Seal upload */
@@ -514,10 +535,16 @@
 </head>
 <body>
 
-<!-- CLIENT MODE BAR (shown only in client mode) -->
+<!-- CLIENT MODE BAR -->
 <div class="client-mode-bar" id="client-mode-bar" style="display:none">
   <div class="dot"></div>
   <span>客戶簽名模式 — 本報價單內容已鎖定，請於下方完成簽名後送出確認</span>
+</div>
+
+<!-- CONFIRM MODE BAR -->
+<div class="client-mode-bar" id="confirm-mode-bar" style="display:none;background:#1a0d00">
+  <div class="dot" style="background:#e8a838"></div>
+  <span>負責人確認模式 — 客戶已完成簽名，請您確認並完成最終簽名</span>
 </div>
 
 <div class="document" id="doc">
@@ -838,6 +865,12 @@
       <button class="btn-submit" id="btn-client-submit" onclick="submitClientSign()">確認並送出簽名</button>
       <div class="submit-note">送出後將通知 KAYON STUDIO 進行最終確認</div>
     </div>
+
+    <!-- 負責人確認模式送出 -->
+    <div id="confirm-submit-area" style="display:none;flex-direction:column;align-items:center;gap:12px">
+      <button class="btn-submit" id="btn-confirm-submit" onclick="submitOwnerConfirm()">完成確認並送出</button>
+      <div class="submit-note">送出後將寄送最終確認信給客戶、業務與財務</div>
+    </div>
   </div>
 
 </div><!-- /document -->
@@ -851,8 +884,8 @@ let taxMode = 'inc';
 
 // ── Mode Detection ────────────────────────────────────────────
 const urlParams  = new URLSearchParams(window.location.search);
-const PAGE_MODE  = urlParams.get('mode') || 'staff'; // 'staff' | 'sign'
-const QUOTE_ID   = urlParams.get('id')   || ''; // 'inc' = 含稅, 'exc' = 未含稅
+const PAGE_MODE  = urlParams.get('mode') || 'staff'; // 'staff' | 'sign' | 'confirm'
+const QUOTE_ID   = urlParams.get('id')   || '';
 
 function setTaxMode(mode) {
   taxMode = mode;
@@ -901,6 +934,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
   if (PAGE_MODE === 'sign' && QUOTE_ID) {
     initClientMode();
+  } else if (PAGE_MODE === 'confirm' && QUOTE_ID) {
+    initConfirmMode();
   } else {
     addItem();
     initSignature();
@@ -1050,6 +1085,103 @@ function submitClientSign() {
     showMsg('error', '網路錯誤，請稍後再試');
     btn.disabled    = false;
     btn.textContent = '確認並送出簽名';
+  });
+}
+
+// ── Confirm Mode Init (負責人) ───────────────────────────────
+function initConfirmMode() {
+  document.body.classList.add('client-mode'); // reuse same lock styles
+  document.getElementById('confirm-mode-bar').style.display = 'flex';
+  document.getElementById('staff-submit-area').style.display = 'none';
+  document.getElementById('client-submit-area').style.display = 'none';
+  document.getElementById('confirm-submit-area').style.display = 'flex';
+
+  // Show owner signature block only (unlock it)
+  document.querySelectorAll('.sign-block-owner').forEach(el => {
+    el.style.display = 'flex';
+  });
+
+  // Show client + sales as readonly
+  document.querySelectorAll('.sign-block-client, .sign-block-sales').forEach(el => {
+    el.style.display = 'flex';
+    el.querySelectorAll('.sig-tabs, .sig-clear, .sig-upload-area, input[type=file], .seal-remove').forEach(b => b.style.display = 'none');
+    el.querySelectorAll('.sig-canvas').forEach(c => c.style.pointerEvents = 'none');
+    el.querySelectorAll('.seal-hint').forEach(h => h.style.display = 'none');
+  });
+
+  // Show our seals readonly
+  document.querySelectorAll('.sign-block-seals').forEach(el => {
+    el.style.display = 'flex';
+    el.querySelectorAll('input[type=file], .seal-remove').forEach(b => b.style.display = 'none');
+    el.querySelectorAll('.seal-hint').forEach(h => h.style.display = 'none');
+  });
+
+  // Lock all form inputs
+  document.querySelectorAll('.section input, .section select, .section textarea').forEach(el => {
+    el.readOnly = true; el.disabled = true;
+    el.style.pointerEvents = 'none'; el.style.color = '#555';
+  });
+  document.querySelectorAll('.btn-delete, .btn-add-item').forEach(el => el.style.display = 'none');
+
+  // Show client sig blocks readonly
+  ['client-sig-block','client-seal-small-block','client-seal-large-block'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.display = 'flex';
+      el.querySelectorAll('.sig-tabs,.sig-clear,.sig-upload-area,input[type=file],.seal-remove').forEach(b => b.style.display='none');
+      el.querySelectorAll('.sig-canvas').forEach(c => c.style.pointerEvents='none');
+      el.querySelectorAll('.seal-hint').forEach(h => h.style.display='none');
+    }
+  });
+
+  // Load data
+  showMsg('ok', '載入報價單資料中…');
+  callGAS({ action: 'get_quotation', quoteNo: QUOTE_ID }).then(data => {
+    hideMsg();
+    if (data.status === 'ok' && data.data) {
+      populateQuoteData(data.data);
+      // Restore client signature
+      if (data.data.clientSign) {
+        const wrap = document.getElementById('client-draw-wrap');
+        if (wrap) wrap.innerHTML = `<img src="${data.data.clientSign}" style="max-height:80px;max-width:100%;object-fit:contain" />`;
+      }
+    } else {
+      showMsg('error', '找不到報價單 ' + QUOTE_ID);
+    }
+  }).catch(() => showMsg('error', '網路錯誤，請稍後再試'));
+
+  initSignature();
+}
+
+// ── Owner Confirm Submit ──────────────────────────────────────
+function submitOwnerConfirm() {
+  const sig = getSigData('owner');
+  if (!sig) { showMsg('error', '請先完成負責人簽名'); return; }
+
+  const btn = document.getElementById('btn-confirm-submit');
+  btn.disabled = true;
+  btn.textContent = '送出中…';
+
+  callGAS({
+    action:        'owner_confirm',
+    quoteNo:       QUOTE_ID,
+    ownerSignature: sig,
+    ownerName:     document.getElementById('f-owner')?.value || 'KAYON',
+    ownerEmail:    'kayon@karbonxgaiaentertainment.com',
+    clientEmail:   document.getElementById('f-email')?.value || '',
+  }).then(data => {
+    if (data.status === 'ok') {
+      showMsg('ok', '確認完成！最終確認信已寄出。');
+      btn.textContent = '已完成';
+    } else {
+      showMsg('error', data.message || '送出失敗');
+      btn.disabled = false;
+      btn.textContent = '完成確認並送出';
+    }
+  }).catch(() => {
+    showMsg('error', '網路錯誤，請稍後再試');
+    btn.disabled = false;
+    btn.textContent = '完成確認並送出';
   });
 }
 
