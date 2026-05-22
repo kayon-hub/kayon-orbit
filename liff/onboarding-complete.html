@@ -3,34 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>入職程序 - KARBØN X GAIA</title>
+  <title>入職完成 - KARBØN X GAIA ORBIT</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/line-liff/2.0.0/liff.min.js"></script>
   <style>
-    body { margin:0; padding:0; background:#05050a; color:white; font-family:system-ui; text-align:center; }
-    .glass { background:rgba(10,10,20,0.9); backdrop-filter:blur(20px); border:1px solid #67e8f9; border-radius:24px; padding:40px; max-width:500px; margin:40px auto; }
-    button { background:#67e8f9; color:#000; padding:16px 32px; font-size:18px; border:none; border-radius:16px; margin-top:20px; }
+    body { margin:0; padding:20px; background:#05050a; color:white; font-family:system-ui; text-align:center; }
+    .glass { background:rgba(10,10,20,0.95); backdrop-filter:blur(20px); border:1px solid #67e8f9; border-radius:24px; padding:40px 24px; max-width:480px; margin:40px auto; }
+    h1 { color:#67e8f9; }
+    button { background:#67e8f9; color:#000; padding:18px 36px; font-size:18px; font-weight:bold; border:none; border-radius:16px; margin-top:30px; width:100%; }
   </style>
 </head>
 <body>
   <div class="glass">
-    <h1>🎉 入職資料已送出</h1>
-    <p style="color:#67e8f9; margin:20px 0;">請點擊下方按鈕完成最後一步</p>
+    <h1>🎉 入職資料已成功送出</h1>
+    <p style="color:#67e8f9; margin:24px 0 16px;">感謝您的填寫</p>
     <p style="color:#aaa; line-height:1.6;">
-      您將跳轉至正式系統<br>
-      使用 Google 帳號登入 + 設定 Face ID / 指紋辨識
+      請點擊下方按鈕完成最後一步<br>
+      使用 Google 帳號登入 + 設定生物識別
     </p>
     
-    <button onclick="goToERP()">前往完成 Google 登入</button>
+    <button onclick="goToERP()">前往 Google 登入完成入職</button>
   </div>
 
   <script>
     function goToERP() {
-      // 這裡之後替換成你真正的 ERP 註冊頁面網址
-      const erpUrl = "https://your-erp-domain.com/register?source=line"; 
-      window.location.href = erpUrl;
+      // ← 這裡之後請替換成你真正的 ERP 註冊頁面網址
+      window.location.href = "https://your-erp-domain.com/register?from=line";
     }
 
-    // 可選：取得 LINE 資料
     async function init() {
       await liff.init({ liffId: "2010149593-DyntMxoX" });
     }
