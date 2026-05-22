@@ -511,6 +511,10 @@
     body.client-mode .sign-block-owner,
     body.client-mode .sign-block-seals { display:none; }
 
+    /* 業務模式下隱藏負責人簽名和公司章（業務不能碰這些） */
+    body:not(.client-mode):not(.confirm-mode) .sign-block-owner,
+    body:not(.client-mode):not(.confirm-mode) .sign-block-seals { display:none; }
+
     /* 客戶連結產生區塊 */
     .link-box {
       background: #f5f2ec; border: 1px solid #d0cab8;
@@ -990,8 +994,8 @@ function initClientMode() {
   showMsg('ok', '載入報價單資料中…');
   callGAS({ action: 'get_quotation', quoteNo: QUOTE_ID }).then(data => {
     hideMsg();
-    if (data.status === 'ok' && data.data) {
-      populateQuoteData(data.data);
+    if (data.status === 'ok') {
+      populateQuoteData(data);
     } else {
       showMsg('error', '找不到報價單 ' + QUOTE_ID);
     }
@@ -1090,7 +1094,8 @@ function submitClientSign() {
 
 // ── Confirm Mode Init (負責人) ───────────────────────────────
 function initConfirmMode() {
-  document.body.classList.add('client-mode'); // reuse same lock styles
+  document.body.classList.add('client-mode');
+  document.body.classList.add('confirm-mode');
   document.getElementById('confirm-mode-bar').style.display = 'flex';
   document.getElementById('staff-submit-area').style.display = 'none';
   document.getElementById('client-submit-area').style.display = 'none';
@@ -1109,11 +1114,10 @@ function initConfirmMode() {
     el.querySelectorAll('.seal-hint').forEach(h => h.style.display = 'none');
   });
 
-  // Show our seals readonly
+  // Unlock our seals for owner to upload
   document.querySelectorAll('.sign-block-seals').forEach(el => {
     el.style.display = 'flex';
-    el.querySelectorAll('input[type=file], .seal-remove').forEach(b => b.style.display = 'none');
-    el.querySelectorAll('.seal-hint').forEach(h => h.style.display = 'none');
+    // seals are UNLOCKED in confirm mode — owner can upload
   });
 
   // Lock all form inputs
@@ -1138,12 +1142,12 @@ function initConfirmMode() {
   showMsg('ok', '載入報價單資料中…');
   callGAS({ action: 'get_quotation', quoteNo: QUOTE_ID }).then(data => {
     hideMsg();
-    if (data.status === 'ok' && data.data) {
-      populateQuoteData(data.data);
+    if (data.status === 'ok') {
+      populateQuoteData(data);
       // Restore client signature
-      if (data.data.clientSign) {
+      if (data.clientSign) {
         const wrap = document.getElementById('client-draw-wrap');
-        if (wrap) wrap.innerHTML = `<img src="${data.data.clientSign}" style="max-height:80px;max-width:100%;object-fit:contain" />`;
+        if (wrap) wrap.innerHTML = `<img src="${data.clientSign}" style="max-height:80px;max-width:100%;object-fit:contain" />`;
       }
     } else {
       showMsg('error', '找不到報價單 ' + QUOTE_ID);
@@ -1163,12 +1167,14 @@ function submitOwnerConfirm() {
   btn.textContent = '送出中…';
 
   callGAS({
-    action:        'owner_confirm',
-    quoteNo:       QUOTE_ID,
+    action:         'owner_confirm',
+    quoteNo:        QUOTE_ID,
     ownerSignature: sig,
-    ownerName:     document.getElementById('f-owner')?.value || 'KAYON',
-    ownerEmail:    'kayon@karbonxgaiaentertainment.com',
-    clientEmail:   document.getElementById('f-email')?.value || '',
+    ownerName:      document.getElementById('f-owner')?.value || 'KAYON',
+    ownerEmail:     'kayon@karbonxgaiaentertainment.com',
+    clientEmail:    document.getElementById('f-email')?.value || '',
+    ourSealLarge:   document.getElementById('seal-large-b64').value,
+    ourSealSmall:   document.getElementById('seal-small-b64').value,
   }).then(data => {
     if (data.status === 'ok') {
       showMsg('ok', '確認完成！最終確認信已寄出。');
