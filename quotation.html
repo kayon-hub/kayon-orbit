@@ -987,40 +987,37 @@ function initClientMode() {
   // Hide add item / delete buttons
   document.querySelectorAll('.btn-delete, .btn-add-item').forEach(el => el.style.display = 'none');
 
-  // Lock all form inputs (sections)
-  document.querySelectorAll('.section input, .section select, .section textarea').forEach(el => {
-    el.readOnly = true;
-    el.disabled = true;
-    el.style.pointerEvents = 'none';
-    el.style.color = '#555';
-  });
-
-  // Show sales/owner sig blocks as readonly display (already signed by staff)
-  // Sales and owner canvases are shown but locked - will be populated from GAS data
+  // Show sales sig block readonly
   document.querySelectorAll('.sign-block-sales, .sign-block-owner').forEach(el => {
     el.style.display = 'flex';
-    // Lock their canvases and hide tabs
     el.querySelectorAll('.sig-tabs, .sig-clear, .sig-upload-area').forEach(b => b.style.display = 'none');
     el.querySelectorAll('.sig-canvas').forEach(c => c.style.pointerEvents = 'none');
   });
 
-  // Hide our seals in client mode (client doesn't see our seals)
+  // Hide our seals in client mode
   document.querySelectorAll('.sign-block-seals').forEach(el => {
     el.style.display = 'none';
   });
 
-  // Load quote data from GAS
+  // Load data FIRST, lock fields AFTER
   showMsg('ok', '載入報價單資料中…');
   callGAS({ action: 'get_quotation', quoteNo: QUOTE_ID }).then(data => {
     hideMsg();
     if (data.status === 'ok') {
       populateQuoteData(data);
+      // Lock fields AFTER filling
+      document.querySelectorAll('.section input, .section select, .section textarea').forEach(el => {
+        el.readOnly = true;
+        el.disabled = true;
+        el.style.pointerEvents = 'none';
+        el.style.color = '#333';
+      });
+      document.querySelectorAll('.btn-delete, .btn-add-item').forEach(el => el.style.display = 'none');
     } else {
       showMsg('error', '找不到報價單 ' + QUOTE_ID);
     }
   }).catch(() => showMsg('error', '網路錯誤，請稍後再試'));
 
-  // Init client signature canvas only
   initSignature();
 }
 
