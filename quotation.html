@@ -1003,7 +1003,7 @@ function initClientMode() {
   showMsg('ok', '載入報價單資料中…');
   callGAS({ action: 'get_quotation', quoteNo: QUOTE_ID }).then(data => {
     hideMsg();
-    if (data.status === 'ok') {
+    if (data.statusCode === 200 && data.quoteNo) {
       populateQuoteData(data);
       // Lock fields AFTER filling
       document.querySelectorAll('.section input, .section select, .section textarea').forEach(el => {
@@ -1169,7 +1169,7 @@ function initConfirmMode() {
   showMsg('ok', '載入報價單資料中…');
   callGAS({ action: 'get_quotation', quoteNo: QUOTE_ID }).then(data => {
     hideMsg();
-    if (data.status === 'ok') {
+    if (data.statusCode === 200 && data.quoteNo) {
       populateQuoteData(data);
       // Restore client signature
       if (data.clientSign) {
