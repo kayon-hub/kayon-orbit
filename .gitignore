@@ -1,0 +1,28 @@
+# ============================================================
+# KAYON ORBIT — .gitignore
+# 敏感資料保護
+# ============================================================
+
+# 環境變數與金鑰
+.env
+.env.local
+.env.production
+credentials.json
+secrets.json
+token.json
+service-account.json
+
+# GAS 設定（不應 commit）
+appsscript.json
+config.gs
+
+# 本地開發
+.DS_Store
+Thumbs.db
+node_modules/
+*.log
+
+# 暫存與備份
+*.bak
+*.tmp
+*~
