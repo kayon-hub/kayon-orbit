@@ -1067,7 +1067,10 @@ function populateQuoteData(q) {
     tbody.appendChild(tr);
   });
 
-  document.getElementById('t-total').textContent = 'NT$ ' + Number(q.total).toLocaleString();
+  const totalVal = Number(q.total) || 0;
+  document.getElementById('t-total').textContent    = 'NT$ ' + totalVal.toLocaleString();
+  document.getElementById('t-subtotal').textContent = 'NT$ ' + (Number(q.subtotal) || 0).toLocaleString();
+  document.getElementById('t-tax').textContent      = 'NT$ ' + (Number(q.tax)      || 0).toLocaleString();
 }
 
 function restoreSealImg(imgId, src) {
