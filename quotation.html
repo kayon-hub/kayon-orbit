@@ -1024,7 +1024,7 @@ function initClientMode() {
 function populateQuoteData(q) {
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
   set('f-customer', q.customerName);
-  set('f-contact',  q.contactPerson);
+  set('f-contact',  q.contact || q.contactPerson);
   set('f-phone',    q.phone);
   set('f-email',    q.email);
   set('f-owner',    q.owner);
