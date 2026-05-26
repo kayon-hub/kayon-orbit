@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ORBIT AI ERP — 報價單</title>
+  <title>KAYON ORBIT AI ERP — 報價單</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -567,7 +567,7 @@
   <!-- HEADER -->
   <div class="doc-header">
     <div>
-      <div class="brand-name">ORBIT AI ERP</div>
+      <div class="brand-name">KAYON ORBIT AI ERP</div>
       <div class="brand-sub">KARBØN × GAIA ENTERTAINMENT</div>
     </div>
     <div class="doc-title-block">
@@ -888,7 +888,7 @@
     <!-- 客戶模式送出 -->
     <div id="client-submit-area" style="display:none;flex-direction:column;align-items:center;gap:12px">
       <button class="btn-submit" id="btn-client-submit" onclick="submitClientSign()">確認並送出簽名</button>
-      <div class="submit-note">送出後將通知 ORBIT AI ERP 進行最終確認</div>
+      <div class="submit-note">送出後將通知 KAYON ORBIT AI ERP 進行最終確認</div>
     </div>
 
     <!-- 負責人確認模式送出 -->
@@ -1103,7 +1103,7 @@ function submitClientSign() {
     ownerEmail:   'kayon@karbonxgaiaentertainment.com',
   }).then(data => {
     if (data.status === 'ok') {
-      showMsg('ok', '簽名已送出！ORBIT AI ERP 將盡快完成最終確認。');
+      showMsg('ok', '簽名已送出！KAYON ORBIT AI ERP 將盡快完成最終確認。');
       btn.textContent = '已送出';
     } else {
       showMsg('error', data.message || '送出失敗');
