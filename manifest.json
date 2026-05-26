@@ -1,7 +1,7 @@
 {
   "name": "KAYON ORBIT",
   "short_name": "ORBIT",
-  "description": "KAYON STUDIO AI 工作系統",
+  "description": "ORBIT AI ERP 工作系統",
   "start_url": "/kayon-orbit/",
   "display": "standalone",
   "background_color": "#0a0a0f",
