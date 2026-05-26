@@ -237,8 +237,8 @@
       <div class="nav-item" onclick="switchPage('cases')">
         <span class="nav-icon">◉</span> 案件管理
       </div>
-      <div class="nav-item" onclick="switchPage('quotations')">
-        <span class="nav-icon">◇</span> 報價系統
+      <div class="nav-item" onclick="window.open('quotation.html','_blank')">
+        <span class="nav-icon">◇</span> 新建合約
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -307,10 +307,11 @@
               <th>Email</th>
               <th>累積消費</th>
               <th>最後合作</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody id="customer-tbody">
-            <tr class="empty-row"><td colspan="7">載入中…</td></tr>
+            <tr class="empty-row"><td colspan="8">載入中…</td></tr>
           </tbody>
         </table>
       </div>
@@ -353,16 +354,6 @@
       </div>
     </div>
 
-    <!-- Quotations -->
-    <div class="page" id="page-quotations">
-      <div>
-        <div class="page-title">報價系統</div>
-        <div class="page-sub">Phase 2 · Coming Soon</div>
-      </div>
-      <div class="table-wrap" style="padding:64px;text-align:center;color:#333;font-size:12px;letter-spacing:2px;">
-        QUOTATION MODULE — COMING SOON
-      </div>
-    </div>
 
   </div>
 </div>
@@ -406,54 +397,6 @@
   </div>
 </div>
 
-<!-- Case Modal -->
-<div class="modal-overlay" id="case-modal">
-  <div class="modal">
-    <h3>新增案件</h3>
-    <div class="form-row">
-      <div class="form-group">
-        <div class="form-label">報價單號 *</div>
-        <input class="form-input" id="case-quoteno" placeholder="KGE-202605-001" />
-      </div>
-      <div class="form-group">
-        <div class="form-label">客戶名稱 *</div>
-        <input class="form-input" id="case-customer" placeholder="客戶名稱" />
-      </div>
-    </div>
-    <div class="form-group">
-      <div class="form-label">專案名稱 *</div>
-      <input class="form-input" id="case-project" placeholder="專案名稱" />
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <div class="form-label">案件營收 (NT$)</div>
-        <input class="form-input" id="case-revenue" type="number" placeholder="0" />
-      </div>
-      <div class="form-group">
-        <div class="form-label">案件總成本 (NT$)</div>
-        <input class="form-input" id="case-cost" type="number" placeholder="0" />
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <div class="form-label">交期天數</div>
-        <input class="form-input" id="case-days" type="number" placeholder="7" />
-      </div>
-      <div class="form-group">
-        <div class="form-label">負責人</div>
-        <input class="form-input" id="case-owner" placeholder="KAYON" />
-      </div>
-    </div>
-    <div class="form-group">
-      <div class="form-label">交期說明</div>
-      <input class="form-input" id="case-daysnote" placeholder="訂金確認後N個工作天完成" />
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('case-modal')">取消</button>
-      <button class="btn btn-primary" onclick="submitCase()">建立案件</button>
-    </div>
-  </div>
-</div>
 
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbytDkvfXSFIhOxOQKx8LAOtdu3MJKGWUPw3T9xu_jAQNbrVE6EcKEsqINOkw_AIU7wQ/exec';
@@ -572,6 +515,7 @@ function renderCustomers(list) {
       <td>${c.email || '—'}</td>
       <td>NT$ ${Number(c.totalSpent).toLocaleString()}</td>
       <td>${c.lastDate || '—'}</td>
+      <td><button class="btn btn-primary" style="padding:4px 12px;font-size:11px" onclick="window.open('quotation.html?customer=${encodeURIComponent(c.name)}','_blank')">建立合約</button></td>
     </tr>
   `).join('');
 }

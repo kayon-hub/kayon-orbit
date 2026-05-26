@@ -964,6 +964,11 @@ window.addEventListener('DOMContentLoaded', () => {
   } else {
     addItem();
     initSignature();
+    const preCustomer = urlParams.get('customer');
+    if (preCustomer) {
+      document.getElementById('f-customer').value = preCustomer;
+      document.getElementById('f-customer-display').textContent = preCustomer;
+    }
     document.getElementById('f-customer').addEventListener('input', e => {
       document.getElementById('f-customer-display').textContent = e.target.value || '客戶';
     });
