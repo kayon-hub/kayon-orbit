@@ -911,6 +911,9 @@ let taxMode = 'inc';
 const urlParams  = new URLSearchParams(window.location.search);
 const PAGE_MODE  = urlParams.get('mode') || 'staff'; // 'staff' | 'sign' | 'confirm'
 const QUOTE_ID   = urlParams.get('id')   || '';
+const DRAFT_MODE = urlParams.get('draft') === 'true';
+let draftQuoteNo = urlParams.get('quoteNo') || '';
+const DRAFT_STORAGE_KEY = 'orbit_quote_draft';
 
 function setTaxMode(mode) {
   taxMode = mode;
@@ -962,12 +965,16 @@ window.addEventListener('DOMContentLoaded', () => {
   } else if (PAGE_MODE === 'confirm' && QUOTE_ID) {
     initConfirmMode();
   } else {
-    addItem();
-    initSignature();
-    const preCustomer = urlParams.get('customer');
-    if (preCustomer) {
-      document.getElementById('f-customer').value = preCustomer;
-      document.getElementById('f-customer-display').textContent = preCustomer;
+    if (DRAFT_MODE) {
+      loadDraftQuote();
+    } else {
+      addItem();
+      initSignature();
+      const preCustomer = urlParams.get('customer');
+      if (preCustomer) {
+        document.getElementById('f-customer').value = preCustomer;
+        document.getElementById('f-customer-display').textContent = preCustomer;
+      }
     }
     document.getElementById('f-customer').addEventListener('input', e => {
       document.getElementById('f-customer-display').textContent = e.target.value || '客戶';
@@ -1324,6 +1331,61 @@ function removeItem(id) {
   recalcTotals();
 }
 
+function loadDraftQuote() {
+  const draftText = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+  if (!draftText) {
+    addItem();
+    initSignature();
+    return;
+  }
+  try {
+    const draft = JSON.parse(draftText);
+    populateDraftQuote(draft);
+    sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+  } catch (err) {
+    addItem();
+    initSignature();
+  }
+}
+
+function populateDraftQuote(draft) {
+  initSignature();
+  if (draft.quoteNo) {
+    draftQuoteNo = draft.quoteNo;
+    document.getElementById('display-quote-no').textContent = draft.quoteNo;
+  }
+  if (draft.customerName) {
+    document.getElementById('f-customer').value = draft.customerName;
+    document.getElementById('f-customer-display').textContent = draft.customerName;
+  }
+  document.getElementById('f-project').value = draft.projectName || '';
+  document.getElementById('f-owner').value = draft.owner || 'KAYON';
+
+  if (Array.isArray(draft.items) && draft.items.length) {
+    clearItems();
+    draft.items.forEach(item => {
+      addItem();
+      const id = itemCount;
+      document.getElementById('item-desc-' + id).value = item.description || '';
+      document.getElementById('item-price-' + id).value = item.price || 0;
+      document.getElementById('item-qty-' + id).value = item.quantity || 1;
+      recalcRow(id);
+    });
+  } else {
+    addItem();
+  }
+
+  if (draft.subtotal !== undefined) {
+    recalcTotals();
+  }
+}
+
+function clearItems() {
+  const tbody = document.getElementById('items-tbody');
+  tbody.innerHTML = '';
+  itemCount = 0;
+}
+
 // ── Totals ────────────────────────────────────────────────────
 const PROMOS = {
   'KAYON88':  { type:'percent', value:12 },
@@ -1534,6 +1596,7 @@ function submitQuotation() {
 
   const payload = {
     action:        'create_quotation',
+    quoteNo:       draftQuoteNo || undefined,
     customerName:  customer,
     contactPerson: document.getElementById('f-contact').value,
     phone:         document.getElementById('f-phone').value,

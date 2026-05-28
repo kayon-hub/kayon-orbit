@@ -123,6 +123,7 @@
                    padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
     td           { font-size: 13px; padding: 12px 16px; border-bottom: 1px solid #0f0f18;
                    color: var(--text); }
+    .right      { text-align: right; }
     tr:last-child td { border-bottom: none; }
     tr:hover td  { background: rgba(255,255,255,.02); }
     .empty-row td { color: #333; text-align: center; font-size: 12px; letter-spacing: 1px; padding: 32px; }
@@ -234,6 +235,9 @@
       <div class="nav-item" onclick="switchPage('customers')">
         <span class="nav-icon">◎</span> 客戶管理
       </div>
+      <div class="nav-item" onclick="switchPage('quote')">
+        <span class="nav-icon">✦</span> 報價系統
+      </div>
       <div class="nav-item" onclick="switchPage('cases')">
         <span class="nav-icon">◉</span> 案件管理
       </div>
@@ -314,6 +318,74 @@
             <tr class="empty-row"><td colspan="8">載入中…</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Quote Builder -->
+    <div class="page" id="page-quote">
+      <div>
+        <div class="page-title">報價系統</div>
+        <div class="page-sub">客戶選擇、服務項目、金額試算，完成後直接進入合約流程</div>
+      </div>
+      <div class="table-wrap" style="padding:24px;">
+        <div class="search-row" style="align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:16px;">
+          <div style="flex:1; min-width:260px; display:grid; gap:12px;">
+            <div class="form-group">
+              <div class="form-label">客戶</div>
+              <div style="display:flex; gap:12px; align-items:center;">
+                <select id="quote-customer-select" class="form-input" style="flex:1;"></select>
+                <button class="btn btn-primary btn-sm" onclick="openCustomerModal()">新增</button>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <div class="form-label">專案名稱</div>
+                <input class="form-input" id="quote-project" placeholder="輸入專案名稱" />
+              </div>
+              <div class="form-group">
+                <div class="form-label">負責業務</div>
+                <input class="form-input" id="quote-owner" placeholder="KAYON" />
+              </div>
+            </div>
+          </div>
+          <div style="min-width:240px; display:grid; gap:12px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <div class="form-label">報價單號</div>
+              <input class="form-input" id="quote-no" placeholder="按右側產生" readonly />
+            </div>
+            <button class="btn btn-sm" style="width:176px;" onclick="generateQuoteNo()">產生報價單號</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>服務項目</th>
+                <th>說明</th>
+                <th>單價</th>
+                <th>數量</th>
+                <th>小計</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="quote-items-tbody"></tbody>
+          </table>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-top:16px; align-items:center;">
+          <button class="btn btn-primary" onclick="addQuoteItem()">＋ 新增服務項目</button>
+          <div style="display:grid; gap:8px; width:260px; text-align:right;">
+            <div><span class="form-label">小計</span> <strong id="quote-subtotal">NT$ 0</strong></div>
+            <div><span class="form-label">稅金</span> <strong id="quote-tax">NT$ 0</strong></div>
+            <div><span class="form-label">總計</span> <strong id="quote-total">NT$ 0</strong></div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; margin-top:20px; gap:12px;">
+          <button class="btn" onclick="resetQuoteBuilder()">重置</button>
+          <button class="btn btn-primary" onclick="submitQuoteDraft()">完成報價並進入合約</button>
+        </div>
       </div>
     </div>
 
@@ -463,6 +535,7 @@ function switchPage(page) {
   event.currentTarget.classList.add('active');
 
   if (page === 'customers') loadCustomers();
+  if (page === 'quote')     loadQuotePage();
   if (page === 'cases')     loadCases();
 }
 
@@ -479,6 +552,191 @@ function loadDashboardStats() {
 
 // ── Customers ─────────────────────────────────────────────────
 let allCustomers = [];
+let quoteItemCount = 0;
+const QUOTE_DRAFT_KEY = 'orbit_quote_draft';
+const QUOTE_PRODUCTS = [
+  { id:'S-001', name:'品牌策略諮詢', desc:'包含需求訪談、提案方向、執行建議。', price:12000 },
+  { id:'S-002', name:'網站視覺設計', desc:'含首頁與內頁視覺稿設計，提供 2 次修正。', price:18000 },
+  { id:'S-003', name:'社群內容規劃', desc:'每月 8 則社群貼文文案與素材規劃。', price:9000 },
+  { id:'S-004', name:'影音企劃製作', desc:'含腳本、現場拍攝與後製剪輯。', price:25000 },
+  { id:'S-005', name:'活動執行服務', desc:'活動現場協調與行政支援。', price:15000 },
+  { id:'CUSTOM', name:'自訂服務項目', desc:'自由填寫服務說明與金額。', price:0 },
+];
+
+function loadQuotePage() {
+  loadQuoteCustomers();
+  document.getElementById('quote-project').value = '';
+  document.getElementById('quote-owner').value = currentUser?.name || '';
+  document.getElementById('quote-no').value = '';
+  document.getElementById('quote-items-tbody').innerHTML = '';
+  quoteItemCount = 0;
+  addQuoteItem();
+  recalcQuoteTotals();
+}
+
+function loadQuoteCustomers() {
+  callGAS({ action: 'get_customers', keyword: '' }).then(data => {
+    const customers = data.data || [];
+    renderQuoteCustomerOptions(customers);
+  });
+}
+
+function renderQuoteCustomerOptions(customers) {
+  const select = document.getElementById('quote-customer-select');
+  const current = select?.value || '';
+  select.innerHTML = '<option value="">— 選擇客戶 —</option>' +
+    customers.map(c => `<option value="${c.name}">${c.name}${c.phone ? ' · ' + c.phone : ''}${c.email ? ' · ' + c.email : ''}</option>`).join('');
+  if (current) select.value = current;
+}
+
+function addQuoteItem(item = {}) {
+  const id = ++quoteItemCount;
+  const tbody = document.getElementById('quote-items-tbody');
+  const tr = document.createElement('tr');
+  tr.id = 'quote-item-row-' + id;
+  tr.innerHTML = `
+    <td>
+      <select id="quote-item-product-${id}" class="form-input" onchange="onQuoteItemSelect(${id})">
+        <option value="">— 選擇服務項目 —</option>
+        ${QUOTE_PRODUCTS.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      <input class="form-input" id="quote-item-desc-${id}" placeholder="服務說明" oninput="recalcQuoteTotals()" />
+    </td>
+    <td>
+      <input class="form-input" id="quote-item-price-${id}" type="number" min="0" placeholder="0" oninput="recalcQuoteTotals()" style="text-align:right;" />
+    </td>
+    <td>
+      <input class="form-input" id="quote-item-qty-${id}" type="number" min="1" value="1" oninput="recalcQuoteTotals()" style="text-align:right;" />
+    </td>
+    <td class="right" id="quote-item-sub-${id}">NT$ 0</td>
+    <td><button class="btn btn-sm" onclick="removeQuoteItem(${id})">×</button></td>
+  `;
+  tbody.appendChild(tr);
+  if (item.productId) {
+    document.getElementById('quote-item-product-' + id).value = item.productId;
+    onQuoteItemSelect(id);
+  }
+  if (item.description) document.getElementById('quote-item-desc-' + id).value = item.description;
+  if (item.price !== undefined) document.getElementById('quote-item-price-' + id).value = item.price;
+  if (item.quantity !== undefined) document.getElementById('quote-item-qty-' + id).value = item.quantity;
+  recalcQuoteRow(id);
+}
+
+function onQuoteItemSelect(id) {
+  const select = document.getElementById('quote-item-product-' + id);
+  const productId = select.value;
+  const prod = QUOTE_PRODUCTS.find(p => p.id === productId);
+  const descEl = document.getElementById('quote-item-desc-' + id);
+  const priceEl = document.getElementById('quote-item-price-' + id);
+
+  if (prod) {
+    if (productId !== 'CUSTOM') {
+      descEl.value = prod.desc;
+    }
+    priceEl.value = prod.price || 0;
+  }
+  recalcQuoteRow(id);
+}
+
+function recalcQuoteRow(id) {
+  const price = parseFloat(document.getElementById('quote-item-price-' + id)?.value) || 0;
+  const qty = parseFloat(document.getElementById('quote-item-qty-' + id)?.value) || 0;
+  const sub = price * qty;
+  document.getElementById('quote-item-sub-' + id).textContent = 'NT$ ' + sub.toLocaleString();
+  recalcQuoteTotals();
+}
+
+function removeQuoteItem(id) {
+  const row = document.getElementById('quote-item-row-' + id);
+  if (row) row.remove();
+  recalcQuoteTotals();
+}
+
+function recalcQuoteTotals() {
+  let subtotal = 0;
+  document.querySelectorAll('[id^="quote-item-row-"]').forEach(row => {
+    const id = row.id.replace('quote-item-row-','');
+    const price = parseFloat(document.getElementById('quote-item-price-' + id)?.value) || 0;
+    const qty = parseFloat(document.getElementById('quote-item-qty-' + id)?.value) || 0;
+    subtotal += price * qty;
+  });
+  const tax = Math.round(subtotal * 0.05);
+  const total = subtotal + tax;
+  document.getElementById('quote-subtotal').textContent = 'NT$ ' + subtotal.toLocaleString();
+  document.getElementById('quote-tax').textContent = 'NT$ ' + tax.toLocaleString();
+  document.getElementById('quote-total').textContent = 'NT$ ' + total.toLocaleString();
+}
+
+function generateQuoteNo() {
+  const now = new Date();
+  const quoteNo = 'Q-' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '-' + Math.floor(1000 + Math.random() * 9000);
+  document.getElementById('quote-no').value = quoteNo;
+  return quoteNo;
+}
+
+function resetQuoteBuilder() {
+  document.getElementById('quote-customer-select').value = '';
+  document.getElementById('quote-project').value = '';
+  document.getElementById('quote-owner').value = currentUser?.name || '';
+  document.getElementById('quote-no').value = '';
+  document.getElementById('quote-items-tbody').innerHTML = '';
+  quoteItemCount = 0;
+  addQuoteItem();
+  recalcQuoteTotals();
+}
+
+function submitQuoteDraft() {
+  const customerName = document.getElementById('quote-customer-select').value.trim();
+  const projectName = document.getElementById('quote-project').value.trim();
+  const owner = document.getElementById('quote-owner').value.trim() || currentUser?.name || 'KAYON';
+  let quoteNo = document.getElementById('quote-no').value.trim();
+  if (!quoteNo) quoteNo = generateQuoteNo();
+
+  if (!customerName) { alert('請選擇客戶'); return; }
+  if (!projectName) { alert('請填寫專案名稱'); return; }
+
+  const items = [];
+  document.querySelectorAll('[id^="quote-item-row-"]').forEach(row => {
+    const id = row.id.replace('quote-item-row-','');
+    const description = document.getElementById('quote-item-desc-' + id)?.value.trim();
+    const price = parseFloat(document.getElementById('quote-item-price-' + id)?.value) || 0;
+    const quantity = parseFloat(document.getElementById('quote-item-qty-' + id)?.value) || 0;
+    if (description && price > 0 && quantity > 0) {
+      items.push({ description, price, quantity });
+    }
+  });
+
+  if (!items.length) { alert('請至少新增一個服務項目並填寫單價'); return; }
+
+  const subtotal = Number(document.getElementById('quote-subtotal').textContent.replace(/[^0-9]/g, '')) || 0;
+  const tax = Number(document.getElementById('quote-tax').textContent.replace(/[^0-9]/g, '')) || 0;
+  const total = Number(document.getElementById('quote-total').textContent.replace(/[^0-9]/g, '')) || 0;
+
+  const draft = {
+    quoteNo,
+    customerName,
+    projectName,
+    owner,
+    items,
+    subtotal,
+    tax,
+    total,
+  };
+
+  sessionStorage.setItem(QUOTE_DRAFT_KEY, JSON.stringify(draft));
+  window.location.href = 'quotation.html?draft=true&quoteNo=' + encodeURIComponent(quoteNo);
+}
+
+function generateQuoteId() {
+  const now = new Date();
+  return 'Q-' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '-' + Math.floor(1000 + Math.random() * 9000);
+}
+
+function isQuotePageActive() {
+  return document.getElementById('page-quote')?.classList.contains('active');
+}
 
 function loadCustomers() {
   document.getElementById('customer-tbody').innerHTML =
@@ -541,6 +799,7 @@ function submitCustomer() {
     if (data.status === 'ok') {
       closeModal('customer-modal');
       loadCustomers();
+      if (isQuotePageActive()) loadQuoteCustomers();
       loadDashboardStats();
     } else {
       alert('錯誤：' + data.message);
