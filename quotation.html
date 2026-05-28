@@ -1204,6 +1204,7 @@ function submitOwnerConfirm() {
   btn.disabled = true;
   btn.textContent = '送出中…';
 
+  const totalText = document.getElementById('t-total')?.textContent || '';
   callGAS({
     action:         'owner_confirm',
     quoteNo:        QUOTE_ID,
@@ -1213,6 +1214,13 @@ function submitOwnerConfirm() {
     clientEmail:    document.getElementById('f-email')?.value || '',
     ourSealLarge:   document.getElementById('seal-large-b64').value,
     ourSealSmall:   document.getElementById('seal-small-b64').value,
+    customerName:   document.getElementById('f-customer')?.value || '',
+    projectName:    document.getElementById('f-project')?.value || '',
+    revenue:        parseInt(totalText.replace(/[^0-9]/g, ''), 10) || 0,
+    cost:           0,
+    days:           Number(document.getElementById('f-days')?.value) || 0,
+    owner:          document.getElementById('f-owner')?.value || 'KAYON',
+    daysNote:       document.getElementById('f-days-note')?.value || '',
   }).then(data => {
     if (data.status === 'ok') {
       showMsg('ok', '確認完成！最終確認信已寄出。');
